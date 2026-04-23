@@ -110,6 +110,36 @@ export default function HomePage() {
         </div>
       </section>
 
+
+      {/* VEHICLE SHOWCASE */}
+      <section className="py-16 bg-navy-950 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <p className="text-slate-400 text-sm font-semibold uppercase tracking-widest mb-3">Purpose-Built Systems — Not Standard Vehicles</p>
+            <h2 className="text-3xl font-bold text-white" style={{fontFamily:'var(--font-playfair)'}}>
+              Every vehicle in this catalog is a <span className="text-gold-400">specialized claims challenge.</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: 'Fire Apparatus', sub: 'Integrated pump & aerial systems', img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
+              { label: 'Police Interceptors', sub: 'Factory-modified platforms', img: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400&q=80' },
+              { label: 'Ambulances', sub: 'Medical module systems', img: 'https://images.unsplash.com/photo-1544991875-5dc1b05f5855?w=400&q=80' },
+              { label: 'Municipal Fleet', sub: 'Public works & utility', img: 'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?w=400&q=80' },
+            ].map(v => (
+              <div key={v.label} className="relative rounded-xl overflow-hidden group">
+                <img src={v.img} alt={v.label} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy-950/90 via-navy-950/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <div className="text-white font-bold text-sm">{v.label}</div>
+                  <div className="text-slate-400 text-xs mt-0.5">{v.sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* PROBLEM SECTION */}
       <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

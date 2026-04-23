@@ -31,6 +31,10 @@ export default function AccreditationPage() {
 
       {/* Header */}
       <div className="bg-navy-900 pt-24 pb-20 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1400&q=80" alt="" className="w-full h-full object-cover opacity-10" />
+          <div className="absolute inset-0 bg-navy-900/80" />
+        </div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-gold-500/5 rounded-full blur-3xl" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex items-center gap-2 text-slate-400 text-sm mb-4">
