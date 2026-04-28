@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
-import { sql } from '@/lib/db'
+import { pool } from '@/lib/db'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -8,31 +11,132 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const dbUrl = process.env.DATABASE_URL || ''
+  const hasUrl = !!dbUrl
+  let host = 'unknown'
   try {
-    await sql`CREATE TABLE IF NOT EXISTS mcsa_profiles (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), clerk_id TEXT UNIQUE NOT NULL, email TEXT NOT NULL DEFAULT '', first_name TEXT, last_name TEXT, role TEXT NOT NULL DEFAULT 'member', organization TEXT, job_title TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())`
-    await sql`CREATE TABLE IF NOT EXISTS mcsa_course_categories (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, description TEXT, order_index INTEGER DEFAULT 0)`
-    await sql`CREATE TABLE IF NOT EXISTS mcsa_courses (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), category_id UUID, course_code TEXT UNIQUE NOT NULL, slug TEXT UNIQUE NOT NULL, title TEXT NOT NULL, description TEXT, level TEXT, duration_hours NUMERIC(4,1) DEFAULT 1.5, is_published BOOLEAN DEFAULT TRUE, order_index INTEGER DEFAULT 0, created_at TIMESTAMPTZ DEFAULT NOW())`
-    await sql`CREATE TABLE IF NOT EXISTS mcsa_modules (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), course_id UUID REFERENCES mcsa_courses(id) ON DELETE CASCADE, title TEXT NOT NULL, content TEXT, duration_minutes INTEGER DEFAULT 20, order_index INTEGER DEFAULT 0, is_preview BOOLEAN DEFAULT FALSE, created_at TIMESTAMPTZ DEFAULT NOW())`
-    await sql`CREATE TABLE IF NOT EXISTS mcsa_enrollments (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), clerk_id TEXT NOT NULL REFERENCES mcsa_profiles(clerk_id), course_id UUID REFERENCES mcsa_courses(id), progress_percent INTEGER DEFAULT 0, completed_at TIMESTAMPTZ, created_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(clerk_id, course_id))`
-    await sql`CREATE TABLE IF NOT EXISTS mcsa_module_progress (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), enrollment_id UUID REFERENCES mcsa_enrollments(id) ON DELETE CASCADE, module_id UUID REFERENCES mcsa_modules(id), completed BOOLEAN DEFAULT FALSE, completed_at TIMESTAMPTZ, UNIQUE(enrollment_id, module_id))`
-    await sql`CREATE TABLE IF NOT EXISTS mcsa_certifications (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), clerk_id TEXT NOT NULL REFERENCES mcsa_profiles(clerk_id), cert_number TEXT UNIQUE NOT NULL, course_id UUID REFERENCES mcsa_courses(id), issued_at TIMESTAMPTZ DEFAULT NOW(), expires_at TIMESTAMPTZ)`
-    await sql`CREATE TABLE IF NOT EXISTS mcsa_resources (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), title TEXT NOT NULL, description TEXT, resource_type TEXT, access_level TEXT DEFAULT 'free', file_url TEXT, external_url TEXT, created_at TIMESTAMPTZ DEFAULT NOW())`
-    await sql`CREATE TABLE IF NOT EXISTS mcsa_membership_plans (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), slug TEXT UNIQUE NOT NULL, name TEXT NOT NULL, price_monthly INTEGER NOT NULL, price_annual INTEGER, features JSONB DEFAULT '[]', is_active BOOLEAN DEFAULT TRUE)`
-    await sql`CREATE INDEX IF NOT EXISTS idx_profiles_clerk ON mcsa_profiles(clerk_id)`
-    await sql`CREATE INDEX IF NOT EXISTS idx_enrollments_clerk ON mcsa_enrollments(clerk_id)`
-    await sql`CREATE INDEX IF NOT EXISTS idx_modules_course ON mcsa_modules(course_id)`
-    await sql`CREATE INDEX IF NOT EXISTS idx_progress_enroll ON mcsa_module_progress(enrollment_id)`
+    host = new URL(dbUrl).hostname
+  } catch {}
 
-    await sql`INSERT INTO mcsa_course_categories (name,slug,description,order_index) VALUES ('Municipal Claims Training','municipal-claims','Full MCSA curriculum',1) ON CONFLICT(slug) DO NOTHING`
+  const diag: Record<string, any> = {
+    DATABASE_URL_present: hasUrl,
+    host,
+    connection_test: null,
+    schema: null,
+    seed: null,
+  }
 
-    const courses: [string,string,string,string,string,number,number][] = [
+  // Step 1 — connection test
+  let client: any
+  try {
+    client = await pool.connect()
+    const { rows } = await client.query('SELECT NOW() as now')
+    diag.connection_test = `OK — ${rows[0].now}`
+  } catch (e: any) {
+    diag.connection_test = `FAILED: ${e.message}`
+    return NextResponse.json({ error: 'Connection failed', diag }, { status: 500 })
+  }
+
+  // Step 2 — schema
+  try {
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_profiles (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      clerk_id TEXT UNIQUE NOT NULL,
+      email TEXT NOT NULL DEFAULT '',
+      first_name TEXT, last_name TEXT,
+      role TEXT NOT NULL DEFAULT 'member',
+      organization TEXT, job_title TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_course_categories (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL,
+      description TEXT, order_index INTEGER DEFAULT 0
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_courses (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      category_id UUID,
+      course_code TEXT UNIQUE NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      title TEXT NOT NULL, description TEXT,
+      level TEXT, duration_hours NUMERIC(4,1) DEFAULT 1.5,
+      is_published BOOLEAN DEFAULT TRUE,
+      order_index INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_modules (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      course_id UUID REFERENCES mcsa_courses(id) ON DELETE CASCADE,
+      title TEXT NOT NULL, content TEXT,
+      duration_minutes INTEGER DEFAULT 20,
+      order_index INTEGER DEFAULT 0,
+      is_preview BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_enrollments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      clerk_id TEXT NOT NULL REFERENCES mcsa_profiles(clerk_id),
+      course_id UUID REFERENCES mcsa_courses(id),
+      progress_percent INTEGER DEFAULT 0,
+      completed_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(clerk_id, course_id)
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_module_progress (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      enrollment_id UUID REFERENCES mcsa_enrollments(id) ON DELETE CASCADE,
+      module_id UUID REFERENCES mcsa_modules(id),
+      completed BOOLEAN DEFAULT FALSE,
+      completed_at TIMESTAMPTZ,
+      UNIQUE(enrollment_id, module_id)
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_certifications (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      clerk_id TEXT NOT NULL REFERENCES mcsa_profiles(clerk_id),
+      cert_number TEXT UNIQUE NOT NULL,
+      course_id UUID REFERENCES mcsa_courses(id),
+      issued_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_resources (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      title TEXT NOT NULL, description TEXT,
+      resource_type TEXT, access_level TEXT DEFAULT 'free',
+      file_url TEXT, external_url TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_membership_plans (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      slug TEXT UNIQUE NOT NULL, name TEXT NOT NULL,
+      price_monthly INTEGER NOT NULL, price_annual INTEGER,
+      features JSONB DEFAULT '[]', is_active BOOLEAN DEFAULT TRUE
+    )`)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_profiles_clerk ON mcsa_profiles(clerk_id)`)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_enrollments_clerk ON mcsa_enrollments(clerk_id)`)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_modules_course ON mcsa_modules(course_id)`)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_progress_enroll ON mcsa_module_progress(enrollment_id)`)
+    diag.schema = 'OK — all tables created'
+  } catch (e: any) {
+    diag.schema = `FAILED: ${e.message}`
+    client.release()
+    return NextResponse.json({ error: 'Schema creation failed', diag }, { status: 500 })
+  }
+
+  // Step 3 — seed
+  try {
+    await client.query(`INSERT INTO mcsa_course_categories (name,slug,description,order_index)
+      VALUES ('Municipal Claims Training','municipal-claims','Full MCSA curriculum',1)
+      ON CONFLICT(slug) DO NOTHING`)
+
+    const courses = [
       ['MCSA-101','mcsa-101-introduction','Introduction to Municipal Claims','Why municipal claims require a different approach — the lifecycle, ecosystem, and MCSA framework.','Beginner',1.5,1],
       ['MCSA-102','mcsa-102-vehicle-classification','Vehicle Classification System','The three-tier classification system: standard fleet, modified commercial, and integrated emergency apparatus.','Beginner',2.0,2],
       ['MCSA-103','mcsa-103-documentation-standards','Documentation & Photo Standards','MCSA photo sequences by vehicle tier, file naming conventions, component inventory, and the carrier-ready file checklist.','Beginner',1.5,3],
       ['MCSA-104','mcsa-104-labor-control','Labor Control Without Labor Guides','Task decomposition method, reasonableness ranges for high-variance tasks, quantity scaling rules.','Intermediate',1.75,4],
       ['MCSA-105','mcsa-105-valuation','Municipal Equipment Valuation','Valuation bands by component category, the source hierarchy, post-2022 pricing reality, and the invoice rule.','Intermediate',1.5,5],
       ['MCSA-106','mcsa-106-repair-facility','Repair Facility Selection','The three-tier repair hierarchy, MCSA routing protocol, split routing, hidden damage, return to service standards.','Intermediate',1.25,6],
-      ['MCSA-107','mcsa-107-police-vehicles','Police & Law Enforcement Vehicles','All major police platforms, Whelen/Federal Signal/SoundOff lighting, Havis consoles, Setina partitions, Motorola APX radios.','Intermediate',2.0,7],
+      ['MCSA-107','mcsa-107-police-vehicles','Police & Law Enforcement Vehicles','All major police platforms, Whelen/Federal Signal lighting, Havis consoles, Setina partitions, Motorola APX radios.','Intermediate',2.0,7],
       ['MCSA-108','mcsa-108-ambulance','Ambulance & EMS Vehicle Claims','Type I/II/III classification, module manufacturers, module systems, the remount decision, and total loss analysis.','Advanced',2.5,8],
       ['MCSA-109','mcsa-109-fire-apparatus','Fire Apparatus Claims','First 30 minutes on scene, apparatus types and OEMs, integrated systems, NFPA 1911/1071, OEM involvement requirements.','Advanced',2.5,9],
       ['MCSA-110','mcsa-110-municipal-fleet','Municipal Fleet & Public Works Equipment','Plow systems, dump body evaluation, hydraulic protocols, aerial boom trucks, and specialty equipment documentation.','Intermediate',1.75,10],
@@ -40,10 +144,14 @@ export async function GET(req: Request) {
       ['MCSA-201','mcsa-201-cmca-certification','Certified Municipal Claims Adjuster (CMCA)','Comprehensive exam prep covering all MCSA-101 through MCSA-301 material. 60-question proctored examination. 80% passing score.','Certification',4.0,12],
     ]
     for (const [code,slug,title,desc,level,dur,idx] of courses) {
-      await sql`INSERT INTO mcsa_courses (course_code,slug,title,description,level,duration_hours,is_published,order_index) VALUES (${code},${slug},${title},${desc},${level},${dur},true,${idx}) ON CONFLICT(slug) DO NOTHING`
+      await client.query(
+        `INSERT INTO mcsa_courses (course_code,slug,title,description,level,duration_hours,is_published,order_index)
+         VALUES ($1,$2,$3,$4,$5,$6,true,$7) ON CONFLICT(slug) DO NOTHING`,
+        [code,slug,title,desc,level,dur,idx]
+      )
     }
 
-    const modules: [string,string,number,boolean,number][] = [
+    const modules = [
       ['mcsa-101-introduction','Why Municipal Claims Require a Different Approach',25,true,0],
       ['mcsa-101-introduction','The Municipal Claims Lifecycle',20,false,1],
       ['mcsa-101-introduction','The Municipal Claims Ecosystem',20,false,2],
@@ -96,15 +204,30 @@ export async function GET(req: Request) {
       ['mcsa-201-cmca-certification','CMCA Certification Examination',50,false,3],
     ]
     for (const [courseSlug,title,dur,preview,order] of modules) {
-      await sql`INSERT INTO mcsa_modules (course_id,title,duration_minutes,is_preview,order_index) SELECT id,${title},${dur},${preview},${order} FROM mcsa_courses WHERE slug=${courseSlug} ON CONFLICT DO NOTHING`
+      await client.query(
+        `INSERT INTO mcsa_modules (course_id,title,duration_minutes,is_preview,order_index)
+         SELECT id,$1,$2,$3,$4 FROM mcsa_courses WHERE slug=$5
+         ON CONFLICT DO NOTHING`,
+        [title,dur,preview,order,courseSlug]
+      )
     }
 
-    await sql`INSERT INTO mcsa_membership_plans (slug,name,price_monthly,price_annual,features) VALUES ('professional','Professional',2900,29000,'["Full course access","CMCA certification","Resource library","Progress tracking"]'),('carrier-tpa','Carrier / TPA',9900,99000,'["Everything in Professional","Multi-user access","Compliance reporting","Priority support"]'),('founding','Founding Member',0,0,'["Lifetime access","All future features","Site recognition"]') ON CONFLICT(slug) DO NOTHING`
+    await client.query(`INSERT INTO mcsa_membership_plans (slug,name,price_monthly,price_annual,features)
+      VALUES
+        ('professional','Professional',2900,29000,'["Full course access","CMCA certification","Resource library","Progress tracking"]'),
+        ('carrier-tpa','Carrier / TPA',9900,99000,'["Everything in Professional","Multi-user access","Compliance reporting","Priority support"]'),
+        ('founding','Founding Member',0,0,'["Lifetime access","All future features","Site recognition"]')
+      ON CONFLICT(slug) DO NOTHING`)
 
-    const [cc] = await sql`SELECT count(*)::int as n FROM mcsa_courses`
-    const [mc] = await sql`SELECT count(*)::int as n FROM mcsa_modules`
-    return NextResponse.json({ success: true, courses: cc.n, modules: mc.n })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    const { rows: cc } = await client.query('SELECT count(*)::int as n FROM mcsa_courses')
+    const { rows: mc } = await client.query('SELECT count(*)::int as n FROM mcsa_modules')
+    diag.seed = `OK — ${cc[0].n} courses, ${mc[0].n} modules`
+
+    client.release()
+    return NextResponse.json({ success: true, courses: cc[0].n, modules: mc[0].n, diag })
+  } catch (e: any) {
+    diag.seed = `FAILED: ${e.message}`
+    client.release()
+    return NextResponse.json({ error: 'Seed failed', diag }, { status: 500 })
   }
 }
