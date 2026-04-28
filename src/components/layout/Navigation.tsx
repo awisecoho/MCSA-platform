@@ -1,104 +1,93 @@
 'use client'
-import { useState, useEffect } from 'react'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Shield, ChevronDown } from 'lucide-react'
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { Menu, X, ChevronDown, Shield } from 'lucide-react'
 
-const navLinks = [
-  { href: '/about', label: 'About' },
-  {
-    label: 'Training',
-    children: [
-      { href: '/training', label: 'All Courses' },
-      { href: '/training/mcsa-101-introduction', label: 'MCSA-101: Introduction' },
-      { href: '/training/mcsa-102-vehicle-classification', label: 'MCSA-102: Classification' },
-      { href: '/training/mcsa-107-police-vehicles', label: 'MCSA-107: Police Vehicles' },
-      { href: '/training/mcsa-108-ambulance', label: 'MCSA-108: Ambulances' },
-      { href: '/training/mcsa-109-fire-apparatus', label: 'MCSA-109: Fire Apparatus' },
-    ]
-  },
-  { href: '/accreditation', label: 'Accreditation' },
-  { href: '/resources', label: 'Resources' },
-  { href: '/membership', label: 'Membership' },
+const trainingLinks = [
+  { href: '/training', label: 'All Courses' },
+  { href: '/training/mcsa-101-introduction', label: 'MCSA-101: Introduction' },
+  { href: '/training/mcsa-107-police-vehicles', label: 'MCSA-107: Police Vehicles' },
+  { href: '/training/mcsa-108-ambulance', label: 'MCSA-108: Ambulances' },
+  { href: '/training/mcsa-109-fire-apparatus', label: 'MCSA-109: Fire Apparatus' },
 ]
 
 export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null)
+  const [trainingOpen, setTrainingOpen] = useState(false)
   const pathname = usePathname()
-  const isDark = pathname === '/'
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const navBg = isDark
-    ? scrolled ? 'bg-navy-950/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
-    : 'bg-white shadow-sm border-b border-slate-200'
-
-  const textColor = isDark ? 'text-white' : 'text-slate-700'
-  const logoColor = isDark ? 'text-white' : 'text-navy-900'
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBg}`}>
+    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-gold-400 to-gold-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-gold-400/30 transition-shadow">
-              <Shield className="w-5 h-5 text-navy-900" strokeWidth={2.5} />
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-[#07061f] rounded-lg flex items-center justify-center">
+              <Shield className="w-5 h-5 text-[#f59e0b]" />
             </div>
             <div>
-              <span className={`font-bold text-lg leading-none tracking-tight ${logoColor}`} style={{fontFamily:'var(--font-playfair)'}}>MCSA</span>
-              <span className={`block text-xs leading-none mt-0.5 opacity-70 ${textColor}`}>Municipal Claims Standards</span>
+              <div className="font-bold text-[#07061f] leading-none text-sm">MCSA</div>
+              <div className="text-xs text-gray-500 leading-none">Municipal Claims Standards</div>
             </div>
           </Link>
 
-          {/* Desktop Nav */}
+          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) =>
-              link.children ? (
-                <div key={link.label} className="relative"
-                  onMouseEnter={() => setDropdownOpen(link.label)}
-                  onMouseLeave={() => setDropdownOpen(null)}>
-                  <button className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${textColor} hover:bg-white/10`}>
-                    {link.label} <ChevronDown className="w-3.5 h-3.5 opacity-60" />
-                  </button>
-                  {dropdownOpen === link.label && (
-                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                      {link.children.map(child => (
-                        <Link key={child.href} href={child.href}
-                          className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-navy-800 transition-colors">
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+            <Link href="/about" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/about' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
+              About
+            </Link>
+
+            {/* Training dropdown */}
+            <div className="relative" onMouseEnter={() => setTrainingOpen(true)} onMouseLeave={() => setTrainingOpen(false)}>
+              <Link href="/training" className={`flex items-center gap-1 px-3 py-2 text-sm rounded-lg transition-colors ${pathname.startsWith('/training') ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
+                Training <ChevronDown className="w-3.5 h-3.5" />
+              </Link>
+              {trainingOpen && (
+                <div className="absolute top-full left-0 w-64 bg-white border border-gray-200 rounded-xl shadow-lg py-2 mt-1">
+                  {trainingLinks.map(l => (
+                    <Link key={l.href} href={l.href} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#07061f]">
+                      {l.label}
+                    </Link>
+                  ))}
                 </div>
-              ) : (
-                <Link key={link.href} href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${textColor} hover:bg-white/10 ${pathname === link.href ? 'bg-white/15' : ''}`}>
-                  {link.label}
-                </Link>
-              )
-            )}
+              )}
+            </div>
+
+            <Link href="/accreditation" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/accreditation' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
+              Accreditation
+            </Link>
+            <Link href="/resources" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/resources' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
+              Resources
+            </Link>
+            <Link href="/membership" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/membership' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
+              Membership
+            </Link>
           </div>
 
-          {/* CTA */}
+          {/* Auth */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/login" className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${textColor} hover:bg-white/10`}>
-              Sign In
-            </Link>
-            <Link href="/membership" className="bg-gold-500 hover:bg-gold-400 text-navy-900 font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-md">
-              Join MCSA
-            </Link>
+            <SignedOut>
+              <Link href="/sign-in" className="text-sm text-gray-600 hover:text-[#07061f] transition-colors">
+                Sign In
+              </Link>
+              <Link href="/sign-up" className="bg-[#f59e0b] text-[#07061f] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#fbbf24] transition-colors">
+                Join MCSA
+              </Link>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard" className="text-sm text-gray-600 hover:text-[#07061f] transition-colors">
+                Dashboard
+              </Link>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
           </div>
 
-          {/* Mobile toggle */}
-          <button className={`md:hidden p-2 rounded-lg ${textColor}`} onClick={() => setMobileOpen(!mobileOpen)}>
+          {/* Mobile menu button */}
+          <button className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
@@ -106,32 +95,20 @@ export default function Navigation() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-navy-950 border-t border-white/10">
-          <div className="px-4 py-4 space-y-1">
-            {navLinks.map((link) =>
-              link.children ? (
-                <div key={link.label}>
-                  <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">{link.label}</div>
-                  {link.children.map(child => (
-                    <Link key={child.href} href={child.href}
-                      className="block px-6 py-2 text-sm text-slate-300 hover:text-white"
-                      onClick={() => setMobileOpen(false)}>
-                      {child.label}
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <Link key={link.href} href={link.href}
-                  className="block px-3 py-2 text-sm text-white font-medium"
-                  onClick={() => setMobileOpen(false)}>
-                  {link.label}
-                </Link>
-              )
-            )}
-            <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
-              <Link href="/login" className="text-center py-2 text-sm text-slate-300" onClick={() => setMobileOpen(false)}>Sign In</Link>
-              <Link href="/membership" className="bg-gold-500 text-navy-900 font-semibold text-sm px-4 py-2.5 rounded-lg text-center" onClick={() => setMobileOpen(false)}>Join MCSA</Link>
-            </div>
+        <div className="md:hidden border-t border-gray-200 bg-white px-4 py-4 space-y-1">
+          <Link href="/about" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>About</Link>
+          <Link href="/training" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Training</Link>
+          <Link href="/accreditation" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Accreditation</Link>
+          <Link href="/resources" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Resources</Link>
+          <Link href="/membership" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Membership</Link>
+          <div className="pt-2 border-t border-gray-100 flex gap-2">
+            <SignedOut>
+              <Link href="/sign-in" className="flex-1 text-center py-2 text-sm border border-gray-200 rounded-lg text-gray-700" onClick={() => setMobileOpen(false)}>Sign In</Link>
+              <Link href="/sign-up" className="flex-1 text-center py-2 text-sm bg-[#f59e0b] text-[#07061f] font-semibold rounded-lg" onClick={() => setMobileOpen(false)}>Join MCSA</Link>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard" className="flex-1 text-center py-2 text-sm border border-gray-200 rounded-lg text-gray-700" onClick={() => setMobileOpen(false)}>Dashboard</Link>
+            </SignedIn>
           </div>
         </div>
       )}

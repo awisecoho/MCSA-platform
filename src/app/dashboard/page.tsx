@@ -1,159 +1,145 @@
-'use client'
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { auth, currentUser } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import Navigation from '@/components/layout/Navigation'
-import { BookOpen, Award, FileText, Settings, ArrowRight, Shield, CheckCircle, Clock, Star } from 'lucide-react'
+import Footer from '@/components/layout/Footer'
+import Link from 'next/link'
+import { sql } from '@/lib/db'
+import { BookOpen, Award, ArrowRight, Clock } from 'lucide-react'
 
-export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+export default async function Dashboard() {
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.push('/login'); return }
-      setUser(session.user)
-      const { data } = await supabase.from('mcsa_profiles').select('*').eq('id', session.user.id).single()
-      setProfile(data)
-      setLoading(false)
-    }
-    getUser()
-  }, [router])
+  const user = await currentUser()
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-500">Loading your dashboard...</div>
-      </div>
-    )
-  }
+  // Get enrollments with course info
+  const enrollments = await sql`
+    SELECT e.*, c.title, c.course_code, c.slug, c.level, c.duration_hours
+    FROM mcsa_enrollments e
+    JOIN mcsa_courses c ON c.id = e.course_id
+    WHERE e.clerk_id = ${userId}
+    ORDER BY e.created_at DESC
+  `
 
-  const firstName = profile?.first_name || user?.email?.split('@')[0] || 'Member'
+  // Get certifications
+  const certs = await sql`
+    SELECT cert.*, c.title as course_title
+    FROM mcsa_certifications cert
+    JOIN mcsa_courses c ON c.id = cert.course_id
+    WHERE cert.clerk_id = ${userId}
+  `
 
-  const quickLinks = [
-    { href: '/dashboard/courses', icon: BookOpen, label: 'My Courses', desc: 'Continue your training', color: 'bg-blue-50 text-blue-600' },
-    { href: '/dashboard/certifications', icon: Award, label: 'Certifications', desc: 'View your credentials', color: 'bg-gold-50 text-yellow-600' },
-    { href: '/dashboard/resources', icon: FileText, label: 'Resources', desc: 'SOPs, matrices, tools', color: 'bg-emerald-50 text-emerald-600' },
-    { href: '/dashboard/settings', icon: Settings, label: 'Settings', desc: 'Account & membership', color: 'bg-slate-100 text-slate-600' },
-  ]
+  const firstName = user?.firstName || 'there'
+  const inProgress = enrollments.filter((e: any) => e.progress_percent > 0 && e.progress_percent < 100)
+  const notStarted = enrollments.filter((e: any) => e.progress_percent === 0)
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <div className="pt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
-        <div className="bg-navy-900 px-4 sm:px-6 lg:px-8 py-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-start justify-between">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-[#07061f]">Welcome back, {firstName}</h1>
+          <p className="text-gray-500 mt-1">Your MCSA training dashboard</p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+              </div>
               <div>
-                <p className="text-slate-400 text-sm mb-1">Member Dashboard</p>
-                <h1 className="text-3xl font-bold text-white" style={{fontFamily:'var(--font-playfair)'}}>
-                  Welcome back, {firstName}.
-                </h1>
-                <div className="flex items-center gap-2 mt-3">
-                  <div className="flex items-center gap-1.5 bg-gold-500/20 text-gold-400 text-xs font-semibold px-3 py-1.5 rounded-full">
-                    <Shield className="w-3.5 h-3.5" />
-                    {profile?.role === 'accredited' ? 'CMCA Certified' : 'MCSA Member'}
-                  </div>
-                </div>
+                <div className="text-2xl font-bold text-[#07061f]">{enrollments.length}</div>
+                <div className="text-xs text-gray-500">Courses enrolled</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                <Clock className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-[#07061f]">{inProgress.length}</div>
+                <div className="text-xs text-gray-500">In progress</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <Award className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-[#07061f]">{certs.length}</div>
+                <div className="text-xs text-gray-500">Certifications</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          {/* Quick links */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-            {quickLinks.map(link => (
-              <Link key={link.href} href={link.href}
-                className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md hover:border-navy-300 transition-all group">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-3 ${link.color}`}>
-                  <link.icon className="w-4.5 h-4.5 w-5 h-5" />
-                </div>
-                <div className="font-semibold text-navy-900 text-sm">{link.label}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{link.desc}</div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Course progress */}
-            <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h2 className="font-bold text-navy-900">Continue Learning</h2>
-                <Link href="/training" className="text-sm text-navy-600 font-semibold hover:text-navy-900 flex items-center gap-1">
-                  All Courses <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-              <div className="p-6">
-                <p className="text-slate-500 text-sm mb-6">Start with the foundational courses to build toward your CMCA certification.</p>
-                {[
-                  { code: 'MCSA-101', title: 'Introduction to Municipal Claims', slug: 'mcsa-101-introduction', done: false },
-                  { code: 'MCSA-102', title: 'Vehicle Classification System', slug: 'mcsa-102-vehicle-classification', done: false },
-                  { code: 'MCSA-103', title: 'Documentation & Photo Standards', slug: 'mcsa-103-documentation-standards', done: false },
-                  { code: 'MCSA-104', title: 'Labor Control Without Labor Guides', slug: 'mcsa-104-labor-control', done: false },
-                ].map(course => (
-                  <div key={course.slug} className="flex items-center gap-4 py-3 border-b border-slate-50 last:border-0">
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${course.done ? 'bg-emerald-500' : 'bg-slate-100'}`}>
-                      {course.done ? <CheckCircle className="w-4 h-4 text-white" /> : <Clock className="w-3.5 h-3.5 text-slate-400" />}
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs text-slate-400 font-mono mr-2">{course.code}</span>
-                      <span className="text-sm font-medium text-navy-900">{course.title}</span>
-                    </div>
-                    <Link href={`/training/${course.slug}`}
-                      className="text-xs text-navy-600 font-semibold hover:text-navy-900 flex items-center gap-1">
-                      Start <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                ))}
-              </div>
+        {/* Enrolled courses */}
+        {enrollments.length > 0 ? (
+          <div className="bg-white rounded-xl border border-gray-200 mb-6">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h2 className="font-semibold text-[#07061f]">My Courses</h2>
             </div>
-
-            {/* CMCA pathway */}
-            <div className="space-y-4">
-              <div className="bg-gradient-to-br from-navy-900 to-navy-800 rounded-2xl p-6 text-white">
-                <Award className="w-8 h-8 text-gold-400 mb-3" />
-                <h3 className="font-bold text-lg mb-2" style={{fontFamily:'var(--font-playfair)'}}>CMCA Pathway</h3>
-                <p className="text-slate-300 text-sm leading-relaxed mb-4">
-                  Complete all 10 core courses and pass the CMCA exam to earn your credential.
-                </p>
-                <div className="mb-4">
-                  <div className="flex justify-between text-xs text-slate-400 mb-1.5">
-                    <span>Progress</span><span>0 / 10 courses</span>
+            <div className="divide-y divide-gray-100">
+              {enrollments.map((e: any) => (
+                <Link key={e.id} href={`/training/${e.slug}`} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex-shrink-0">
+                    <span className="font-mono text-xs text-[#f59e0b] bg-amber-50 px-2 py-1 rounded">{e.course_code}</span>
                   </div>
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full w-0 bg-gold-400 rounded-full" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 truncate">{e.title}</div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <div className="flex-1 bg-gray-200 rounded-full h-1.5 max-w-32">
+                        <div className="bg-[#f59e0b] h-1.5 rounded-full" style={{width:`${e.progress_percent}%`}}/>
+                      </div>
+                      <span className="text-xs text-gray-400">{e.progress_percent}%</span>
+                    </div>
                   </div>
-                </div>
-                <Link href="/accreditation" className="inline-flex items-center gap-1 text-gold-400 text-sm font-semibold hover:text-gold-300">
-                  View CMCA Requirements <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 </Link>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                <h3 className="font-bold text-navy-900 mb-3">Quick Resources</h3>
-                {[
-                  'Vehicle Classification Quick Guide',
-                  'Municipal Claims Lifecycle Reference Card',
-                ].map(r => (
-                  <div key={r} className="flex items-center gap-2 py-2 border-b border-slate-50 last:border-0">
-                    <Star className="w-3.5 h-3.5 text-gold-400 flex-shrink-0" />
-                    <Link href="/dashboard/resources" className="text-sm text-slate-700 hover:text-navy-900 transition-colors">{r}</Link>
-                  </div>
-                ))}
-                <Link href="/dashboard/resources" className="text-xs text-navy-600 font-semibold mt-3 inline-flex items-center gap-1 hover:text-navy-900">
-                  Full Library <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center mb-6">
+            <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <h3 className="font-semibold text-gray-700 mb-1">No courses yet</h3>
+            <p className="text-gray-500 text-sm mb-4">Browse the training catalog and enroll in your first course.</p>
+            <Link href="/training" className="bg-[#f59e0b] text-[#07061f] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#fbbf24] transition-colors inline-block text-sm">
+              Browse Training
+            </Link>
+          </div>
+        )}
+
+        {/* Certifications */}
+        {certs.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h2 className="font-semibold text-[#07061f]">Certifications</h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {certs.map((c: any) => (
+                <div key={c.id} className="px-6 py-4 flex items-center gap-4">
+                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Award className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">CMCA Certification</div>
+                    <div className="text-xs text-gray-500">Cert #{c.cert_number} · Issued {new Date(c.issued_at).toLocaleDateString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+      <Footer />
     </div>
   )
 }

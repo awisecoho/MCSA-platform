@@ -1,355 +1,597 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { useUser } from '@clerk/nextjs'
 import Navigation from '@/components/layout/Navigation'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { Clock, BookOpen, Award, CheckCircle, ChevronRight, Lock, Play, ArrowRight, ExternalLink, FileText, Youtube } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import {
+  Clock, BookOpen, Lock, CheckCircle, ExternalLink,
+  FileText, Youtube, ArrowLeft, ChevronRight, Play
+} from 'lucide-react'
 
-async function getCourse(slug: string) {
-  const { data } = await supabase
-    .from('mcsa_courses')
-    .select('*, mcsa_course_categories(name, slug)')
-    .eq('slug', slug)
-    .eq('is_published', true)
-    .single()
-  return data
-}
+// ─── VIDEO & RESOURCE DATA ───────────────────────────────────────────────────
 
-async function getModules(courseId: string) {
-  const { data } = await supabase
-    .from('mcsa_modules')
-    .select('*')
-    .eq('course_id', courseId)
-    .order('order_index')
-  return data || []
-}
-
-const courseVideos: Record<string, { title: string; description: string; youtubeId: string; source: string; module: string }[]> = {
+const VIDEOS: Record<string, { title: string; desc: string; id: string; src: string; mod: string }[]> = {
   'mcsa-107-police-vehicles': [
-    { title: 'How We Upfitted This 2023 Ford Interceptor', description: 'Real upfit shop walkthrough showing full emergency equipment installation on a PIU — lighting, console, partition, and radio integration from start to finish. Demonstrates why PIU upfitting is not a simple bolt-on job.', youtubeId: 'msVEhQENp3g', source: 'YouTube — Emergency Vehicle Upfitter', module: 'Module 2 — Lighting Systems' },
-    { title: '80+ Hours to Upfit This Ford Interceptor', description: 'Detailed upfit documentation of the complete scope of equipment installation. Shows the full labor picture for a properly equipped police interceptor.', youtubeId: '7n_pYfjRsvM', source: 'YouTube — Emergency Vehicle Upfitter', module: 'Module 3 — Interior Systems' },
-    { title: 'Ford Pro VIS 2.0 — Upfitting & Vehicle Customization', description: 'Official Ford Pro webinar on the Upfitter Interface System and factory wiring architecture. Essential background for understanding what the factory builds before the upfitter starts.', youtubeId: 'X8HYpfePBQY', source: 'YouTube — Ford Pro', module: 'Module 1 — Police Platforms' },
-    { title: 'Whelen Core System — Feature Spotlight', description: 'Whelen Engineering explains how the Core integrated lighting and siren control system works. Demonstrates the integrated system concept — lighting and siren share one controller.', youtubeId: 'zv64bVE00XY', source: 'YouTube — Whelen Engineering', module: 'Module 2 — Lighting Systems' },
+    { title: 'How We Upfitted This 2023 Ford Interceptor', desc: 'Real shop walkthrough — full emergency equipment installation on a PIU from start to finish.', id: 'msVEhQENp3g', src: 'Emergency Vehicle Upfitter', mod: 'Module 2' },
+    { title: '80+ Hours to Upfit This Ford Interceptor', desc: 'Full labor documentation for a properly equipped police interceptor.', id: '7n_pYfjRsvM', src: 'Emergency Vehicle Upfitter', mod: 'Module 3' },
+    { title: 'Ford Pro VIS 2.0 — Upfitting Webinar', desc: 'Official Ford Pro webinar on the Upfitter Interface System and factory wiring architecture.', id: 'X8HYpfePBQY', src: 'Ford Pro', mod: 'Module 1' },
+    { title: 'Whelen Core System — Feature Spotlight', desc: 'How the Core integrated lighting and siren system works in practice.', id: 'zv64bVE00XY', src: 'Whelen Engineering', mod: 'Module 2' },
   ],
   'mcsa-108-ambulance': [
-    { title: 'How Ambulances Are Made at Braun Industries', description: 'VP of Sales walks through the complete ambulance manufacturing process. Shows structural extrusion frames, module construction, electrical systems, and cabinetry — what adjusters need to understand about system complexity.', youtubeId: 'DatLUUBPS-E', source: 'YouTube — Braun Ambulances', module: 'Module 1 — Classification & Manufacturers' },
-    { title: 'Braun Ambulances — 50 Years of Manufacturing', description: 'Overview of the Braun ambulance build process and product line covering Type I and Type III configurations, module construction, and quality standards.', youtubeId: 'CQb_8ZDmBeI', source: 'YouTube — Braun Ambulances', module: 'Module 2 — Module Systems' },
+    { title: 'How Ambulances Are Made at Braun Industries', desc: 'Complete ambulance manufacturing — structural frames, module construction, electrical systems.', id: 'DatLUUBPS-E', src: 'Braun Ambulances', mod: 'Module 1' },
+    { title: 'Braun Ambulances — 50 Years of Manufacturing', desc: 'Build process overview covering Type I and III configurations.', id: 'CQb_8ZDmBeI', src: 'Braun Ambulances', mod: 'Module 2' },
   ],
   'mcsa-109-fire-apparatus': [
-    { title: 'Inside the Rosenbauer Factory — How Fire Trucks Are Built', description: 'Complete behind-the-scenes factory tour showing chassis construction, body fabrication, pump integration, and electrical systems. The integrated system concept made visible.', youtubeId: 'vccEi4ob_YU', source: 'YouTube — Rosenbauer', module: 'Module 1 — First Response for the Adjuster' },
-    { title: 'Rosenbauer Motors Facility Tour — Chassis & Cab', description: 'Tour of the Rosenbauer Wyoming facility showing how custom chassis and cab systems are designed and built. Why apparatus chassis are not standard commercial trucks.', youtubeId: 'dV6bwsomneA', source: 'YouTube — Rosenbauer America', module: 'Module 2 — Apparatus Types & Manufacturers' },
-    { title: 'Pierce Manufacturing — Building the Most Advanced Fire Trucks', description: 'Detailed look at Pierce manufacturing processes including pump assembly, compartment fabrication, and final build. Shows the level of engineering integration that makes fire apparatus Tier 3.', youtubeId: 'm8EZCg2Y19I', source: 'YouTube — FD Engineering', module: 'Module 2 — Apparatus Types & Manufacturers' },
-    { title: 'Rosenbauer Minnesota Body Facility Tour', description: 'Tour showing fire apparatus body manufacturing, compartmentation, and finishing. Demonstrates body construction complexity and compartment engineering.', youtubeId: 'uUo5hjD4xJk', source: 'YouTube — Rosenbauer America', module: 'Module 3 — Integrated Systems' },
-    { title: 'NFPA 1911 & 1915 — Apparatus Inspection and Maintenance', description: 'Retired Battalion Chief explains NFPA 1911 requirements for in-service apparatus. Critical background — what post-collision testing is required before return to service.', youtubeId: 'U3AJi_Za6fE', source: 'YouTube — Emergency Reporting', module: 'Module 4 — NFPA Standards' },
+    { title: 'Inside the Rosenbauer Factory', desc: 'Chassis construction, body fabrication, pump integration, electrical systems.', id: 'vccEi4ob_YU', src: 'Rosenbauer', mod: 'Module 1' },
+    { title: 'Rosenbauer Motors Facility Tour', desc: 'How custom chassis and cab systems are designed and built.', id: 'dV6bwsomneA', src: 'Rosenbauer America', mod: 'Module 2' },
+    { title: 'Pierce Manufacturing — Building Fire Trucks', desc: 'Pump assembly, compartment fabrication, and final build process.', id: 'm8EZCg2Y19I', src: 'FD Engineering', mod: 'Module 2' },
+    { title: 'Rosenbauer Minnesota Body Facility Tour', desc: 'Body manufacturing, compartmentation, finishing.', id: 'uUo5hjD4xJk', src: 'Rosenbauer America', mod: 'Module 3' },
+    { title: 'NFPA 1911 — Apparatus Inspection', desc: 'What post-collision testing is required before a fire apparatus returns to service.', id: 'U3AJi_Za6fE', src: 'Emergency Reporting', mod: 'Module 4' },
   ],
   'mcsa-110-municipal-fleet': [
-    { title: 'Fisher Engineering — Introduction to Plow Hydraulics', description: "Fisher's official training module on plow hydraulic systems. Covers hydraulic components, how they work together, and system operation. Essential for evaluating hidden hydraulic damage after a collision.", youtubeId: '8umoHfPh9YA', source: 'YouTube — Fisher Engineering', module: 'Module 2 — Plow Systems' },
+    { title: 'Fisher Engineering — Introduction to Plow Hydraulics', desc: "Official Fisher training on plow hydraulic systems — essential for evaluating hidden damage.", id: '8umoHfPh9YA', src: 'Fisher Engineering', mod: 'Module 2' },
   ],
 }
 
-const courseResources: Record<string, { title: string; description: string; url: string; type: 'pdf' | 'web'; badge: string }[]> = {
-  'mcsa-107-police-vehicles': [
-    { title: 'Ford Pro Upfitter Publications', description: 'Official Ford Pro resource hub — Body Builder Layout Books, wiring diagrams, upfitter interface guides, and CAD files for the Police Interceptor Utility. The primary OEM reference for PIU wiring and pre-wired circuit locations.', url: 'https://www.fordpro.com/en-us/upfit/publications/', type: 'web', badge: 'OEM Reference' },
-    { title: 'Ford Pro BBAS Upfitter Support', description: 'Ford Pro Body Builder Advisory Service — technical support for upfitters. Where to direct OEM questions about PIU modifications and system integration.', url: 'https://www.fordpro.com/en-us/upfit/bbas/', type: 'web', badge: 'OEM Support' },
-    { title: 'Whelen Install Guides (All Products)', description: 'All Whelen product installation guides — searchable by product. Critical reference for understanding wiring complexity, connection points, and system architecture for every Whelen emergency lighting and siren product.', url: 'https://www.whelen.com/support-and-training/install-guides', type: 'web', badge: 'Vendor Reference' },
-    { title: 'Whelen Training & WEVT Certification', description: 'Free Whelen training courses covering emergency lighting products, installation, and programming. Includes the free WEVT (Whelen Engineering Vehicle Technician) certification program.', url: 'https://www.whelen.com/whelen-training', type: 'web', badge: 'Free Training' },
-  ],
-  'mcsa-108-ambulance': [
-    { title: 'Braun — Type I vs Type III Ambulance Guide', description: "Braun's official comparison of Type I and Type III configurations — chassis differences, pass-through design, use cases. The clearest manufacturer explanation of type differences available publicly.", url: 'https://www.braunambulances.com/whats-the-difference-between-a-type-i-vs-type-iii-ambulance/', type: 'web', badge: 'OEM Reference' },
-    { title: 'Braun Ambulance Types Overview', description: 'Complete Braun product line overview including all ambulance types, chassis options, and module configurations. Use to identify Braun-manufactured units in the field.', url: 'https://www.braunambulances.com/custom-ambulances/ambulance-types/', type: 'web', badge: 'OEM Reference' },
-    { title: 'Braun Manufacturing Facility & Remount Center', description: "Braun's 105,000 sq ft plant in Van Wert, Ohio and dedicated remount facility in Elkhart, Indiana. Relevant for routing decisions — Braun has a dedicated remount facility.", url: 'https://www.braunambulances.com/us-ohio-ambulance-manufacturer/ambulance-manufacturers-in-usa/', type: 'web', badge: 'Manufacturer Info' },
-    { title: 'Life Line — Type I vs Type III Comparison Guide', description: 'Independent guide to Type I vs Type III selection factors including chassis, fuel type, service life, and road conditions. Useful for total loss and replacement analysis.', url: 'https://www.lifelineambulance.com/resource-center/guide-to-ambulances-types-i-vs-type-iii/', type: 'web', badge: 'Reference Guide' },
-  ],
-  'mcsa-109-fire-apparatus': [
-    { title: 'Pierce Mfg — Product Support & Training Hub', description: "Pierce's official support hub — operator manuals, training events, dealer network, and factory direct training. Starting point for any Pierce apparatus OEM documentation request.", url: 'https://www.piercemfg.com/service/product-support', type: 'web', badge: 'OEM Support' },
-    { title: 'Pierce Inside Videos — Manufacturing Process Library', description: "Pierce's official video library showing pump assembly, ladder assembly, chassis build, cab construction, and more. Demonstrates the integration complexity that makes apparatus Tier 3.", url: 'https://www.piercemfg.com/Pierce/Videos', type: 'web', badge: 'OEM Videos' },
-    { title: 'NFPA 1911 — Standard Overview (NFPA.org)', description: 'Official NFPA resource for NFPA 1911 Standard for the Inspection, Maintenance, Testing, and Retirement of In-Service Emergency Vehicles. Standard reference for post-collision testing requirements.', url: 'https://nfpa92.nfpa.org/codes-and-standards/all-codes-and-standards/list-of-codes-and-standards/detail?code=1911', type: 'web', badge: 'NFPA Standard' },
-    { title: 'NFPA 1911 & 1071 — EVT Overview (IAFC PDF)', description: 'IAFC presentation on NFPA 1911/1071 and Emergency Vehicle Technician certification. Explains what the standards require and how they apply to apparatus in service.', url: 'https://www.iafc.org/docs/default-source/1emerg-vehicle-mgnt/evms_nfpa1911_1071andevt.pdf', type: 'pdf', badge: 'PDF Reference' },
-    { title: 'NFPA 1911 — 2017 Update Explained', description: 'Clear explanation of the 2017 NFPA 1911 update including the expansion to cover ambulances. Practical overview for adjusters who need to understand what the standard requires.', url: 'https://www.fireapparatusmagazine.com/fire-apparatus/nfpa-1911-apparatus-maintenance-standard-updated-for-2017/', type: 'web', badge: 'Standards Guide' },
-    { title: 'Rosenbauer America — Resource Hub', description: 'Rosenbauer America product information, facility tours, and technical resources. Starting point for Rosenbauer apparatus OEM documentation requests.', url: 'https://rosenbaueramerica.com', type: 'web', badge: 'OEM Reference' },
-  ],
-  'mcsa-110-municipal-fleet': [
-    { title: 'BOSS Plow — Training & Tech Support Videos', description: 'BOSS Snowplow official training video library covering product operation, maintenance, hydraulics, and troubleshooting. Reference for plow system components and failure modes.', url: 'https://bossplow.com/en/support/videos', type: 'web', badge: 'Vendor Training' },
-    { title: 'Fisher Engineering — Product & Technical Resources', description: 'Fisher Engineering official site — product specifications, installation guides, and technical resources. Fisher and Western are both Douglas Dynamics brands with shared technical architecture.', url: 'https://fisherplows.com/', type: 'web', badge: 'Vendor Reference' },
-    { title: 'BOSS Plow Parts Glossary', description: 'Comprehensive glossary of snowplow terminology: A-frame, hydraulic manifold, lift cylinder, trip systems, cutting edge, power unit. Essential vocabulary for documenting plow system damage.', url: 'https://info.bossplow.com/blog/blog/bid/157843/the-ultimate-glossary-of-snow-plow-parts-terminology', type: 'web', badge: 'Terminology' },
-  ],
+const RESOURCES: Record<string, { title: string; desc: string; url: string; type: 'pdf' | 'web'; badge: string }[]> = {
   'mcsa-102-vehicle-classification': [
-    { title: 'Ford Police Interceptor Utility — Factory Features', description: "Ford's official PIU features page — factory wiring packages, 250-amp alternator, pre-wired circuits, upfit-friendly features. Demonstrates factory-level differences from the retail Explorer.", url: 'https://www.ford.com/police-vehicles/features/upfit/', type: 'web', badge: 'OEM Reference' },
+    { title: 'Ford Police Interceptor Utility — Factory Features', desc: 'PIU features — 250A alternator, pre-wired circuits, factory differences from retail Explorer.', url: 'https://www.ford.com/police-vehicles/features/upfit/', type: 'web', badge: 'OEM Reference' },
   ],
-  'mcsa-106-repair-routing': [
-    { title: 'West Penn Vehicle Specialists — Emergency Vehicle Upfitting', description: 'Example of a Tier 2 specialty upfitter shop — capabilities, process, and equipment handled. Reference for understanding what a qualified upfitter shop actually does versus a standard body shop.', url: 'https://westpennvs.com/emergency-vehicle-upfitting/', type: 'web', badge: 'Shop Example' },
+  'mcsa-106-repair-facility': [
+    { title: 'West Penn Vehicle Specialists — Emergency Vehicle Upfitting', desc: 'Example of a Tier 2 specialty upfitter — capabilities, process, equipment handled.', url: 'https://westpennvs.com/emergency-vehicle-upfitting/', type: 'web', badge: 'Shop Example' },
+  ],
+  'mcsa-107-police-vehicles': [
+    { title: 'Ford Pro Upfitter Publications', desc: 'Body Builder Layout Books, wiring diagrams, upfitter interface guides for the Police Interceptor Utility.', url: 'https://www.fordpro.com/en-us/upfit/publications/', type: 'web', badge: 'OEM Reference' },
+    { title: 'Whelen Install Guides', desc: 'All Whelen product installation guides — wiring complexity, connection points, system architecture.', url: 'https://www.whelen.com/support-and-training/install-guides', type: 'web', badge: 'Vendor Reference' },
+    { title: 'Whelen Training & WEVT Certification', desc: 'Free Whelen training covering emergency lighting products and WEVT certification.', url: 'https://www.whelen.com/whelen-training', type: 'web', badge: 'Free Training' },
+  ],
+  'mcsa-108-ambulance': [
+    { title: 'Braun — Type I vs Type III Guide', desc: "Braun's official comparison of Type I and III configurations — key differences for claims.", url: 'https://www.braunambulances.com/whats-the-difference-between-a-type-i-vs-type-iii-ambulance/', type: 'web', badge: 'OEM Reference' },
+    { title: 'Braun Ambulance Types Overview', desc: 'Complete Braun product line — all types, chassis options, module configurations.', url: 'https://www.braunambulances.com/custom-ambulances/ambulance-types/', type: 'web', badge: 'OEM Reference' },
+    { title: 'Life Line — Type I vs III Comparison', desc: 'Independent guide to type selection — chassis, fuel type, service life differences.', url: 'https://www.lifelineambulance.com/resource-center/guide-to-ambulances-types-i-vs-type-iii/', type: 'web', badge: 'Reference Guide' },
+  ],
+  'mcsa-109-fire-apparatus': [
+    { title: 'Pierce Mfg — Product Support Hub', desc: "Pierce's official support hub — operator manuals, training, dealer network.", url: 'https://www.piercemfg.com/service/product-support', type: 'web', badge: 'OEM Support' },
+    { title: 'NFPA 1911 — Standard Overview', desc: 'Standard for Inspection, Maintenance, Testing, and Retirement of In-Service Emergency Vehicles.', url: 'https://nfpa92.nfpa.org/codes-and-standards/all-codes-and-standards/list-of-codes-and-standards/detail?code=1911', type: 'web', badge: 'NFPA Standard' },
+    { title: 'NFPA 1911 & 1071 — EVT Overview (IAFC)', desc: 'IAFC presentation on NFPA standards and Emergency Vehicle Technician certification requirements.', url: 'https://www.iafc.org/docs/default-source/1emerg-vehicle-mgnt/evms_nfpa1911_1071andevt.pdf', type: 'pdf', badge: 'PDF Reference' },
+    { title: 'Rosenbauer America — Resource Hub', desc: 'Rosenbauer product information. Starting point for OEM documentation requests.', url: 'https://rosenbaueramerica.com', type: 'web', badge: 'OEM Reference' },
+  ],
+  'mcsa-110-municipal-fleet': [
+    { title: 'BOSS Plow — Training & Tech Videos', desc: 'BOSS official training covering plow operation, maintenance, hydraulics.', url: 'https://bossplow.com/en/support/videos', type: 'web', badge: 'Vendor Training' },
+    { title: 'Fisher Engineering — Technical Resources', desc: 'Fisher product specs and installation guides (Douglas Dynamics family).', url: 'https://fisherplows.com/', type: 'web', badge: 'Vendor Reference' },
+    { title: 'BOSS Plow Parts Glossary', desc: 'A-frame, hydraulic manifold, lift cylinder, cutting edge — terminology for documenting damage.', url: 'https://info.bossplow.com/blog/blog/bid/157843/the-ultimate-glossary-of-snow-plow-parts-terminology', type: 'web', badge: 'Terminology' },
   ],
 }
 
-const badgeColors: Record<string, string> = {
-  'OEM Reference': 'bg-blue-50 text-blue-700 border-blue-200',
-  'OEM Support': 'bg-blue-50 text-blue-700 border-blue-200',
-  'OEM Videos': 'bg-blue-50 text-blue-700 border-blue-200',
-  'Vendor Reference': 'bg-purple-50 text-purple-700 border-purple-200',
-  'Vendor Training': 'bg-purple-50 text-purple-700 border-purple-200',
-  'NFPA Standard': 'bg-red-50 text-red-700 border-red-200',
-  'PDF Reference': 'bg-orange-50 text-orange-700 border-orange-200',
-  'Standards Guide': 'bg-orange-50 text-orange-700 border-orange-200',
-  'Free Training': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'Reference Guide': 'bg-slate-100 text-slate-600 border-slate-200',
-  'Terminology': 'bg-slate-100 text-slate-600 border-slate-200',
-  'Manufacturer Info': 'bg-slate-100 text-slate-600 border-slate-200',
-  'Shop Example': 'bg-amber-50 text-amber-700 border-amber-200',
+// ─── MARKDOWN RENDERER ──────────────────────────────────────────────────────
+
+function renderMd(content: string) {
+  if (!content) return null
+  const lines = content.split('\n')
+  const elements: React.ReactNode[] = []
+  let k = 0
+  let tableRows: React.ReactNode[] = []
+
+  const flushTable = () => {
+    if (tableRows.length > 0) {
+      elements.push(
+        <div key={`t${k++}`} className="overflow-x-auto my-5 rounded-lg border border-gray-200 shadow-sm">
+          <table className="w-full text-sm">
+            <tbody>{tableRows}</tbody>
+          </table>
+        </div>
+      )
+      tableRows = []
+    }
+  }
+
+  const parseLine = (text: string) => {
+    const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/)
+    return parts.map((p, i) => {
+      if (p.startsWith('**') && p.endsWith('**'))
+        return <strong key={i} className="font-semibold text-gray-900">{p.slice(2, -2)}</strong>
+      if (p.startsWith('`') && p.endsWith('`'))
+        return <code key={i} className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800">{p.slice(1, -1)}</code>
+      return p
+    })
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+
+    // Table row
+    if (line.startsWith('|') && !line.match(/^\|[-\s|]+\|$/)) {
+      const cells = line.split('|').filter(c => c.trim())
+      const isHeader = lines[i + 1]?.match(/^\|[-\s|]+\|$/)
+      tableRows.push(
+        <tr key={`tr${k++}`} className={isHeader ? 'bg-[#07061f]' : 'border-t border-gray-100 hover:bg-gray-50'}>
+          {cells.map((c, ci) => isHeader
+            ? <th key={ci} className="px-3 py-2.5 text-left text-xs font-semibold text-white uppercase tracking-wide">{c.trim()}</th>
+            : <td key={ci} className="px-3 py-2.5 text-gray-700">{parseLine(c.trim())}</td>
+          )}
+        </tr>
+      )
+      continue
+    }
+
+    // Non-table line — flush any pending table
+    flushTable()
+
+    if (!line.trim()) continue
+
+    if (line.startsWith('## ')) {
+      elements.push(<h2 key={k++} className="text-lg font-bold text-[#07061f] mt-7 mb-3 pb-2 border-b-2 border-amber-200">{line.slice(3)}</h2>)
+    } else if (line.startsWith('### ')) {
+      elements.push(<h3 key={k++} className="text-base font-semibold text-gray-800 mt-5 mb-2">{line.slice(4)}</h3>)
+    } else if (line.startsWith('#### ')) {
+      elements.push(<h4 key={k++} className="text-sm font-semibold text-gray-700 mt-4 mb-1 uppercase tracking-wide">{line.slice(5)}</h4>)
+    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+      elements.push(
+        <li key={k++} className="ml-5 list-disc text-gray-700 mb-1.5 leading-relaxed">
+          {parseLine(line.slice(2))}
+        </li>
+      )
+    } else if (line.match(/^\d+\. /)) {
+      elements.push(
+        <li key={k++} className="ml-5 list-decimal text-gray-700 mb-1.5 leading-relaxed">
+          {parseLine(line.replace(/^\d+\. /, ''))}
+        </li>
+      )
+    } else if (line.startsWith('> ')) {
+      elements.push(
+        <blockquote key={k++} className="border-l-4 border-amber-400 bg-amber-50 px-4 py-3 my-4 rounded-r-lg text-amber-900 text-sm">
+          {parseLine(line.slice(2))}
+        </blockquote>
+      )
+    } else {
+      elements.push(
+        <p key={k++} className="text-gray-700 leading-relaxed mb-3">
+          {parseLine(line)}
+        </p>
+      )
+    }
+  }
+  flushTable()
+  return <div className="space-y-0.5">{elements}</div>
 }
 
-const levelLabel: Record<string, string> = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' }
-const levelColor: Record<string, string> = {
-  beginner: 'bg-emerald-100 text-emerald-700',
-  intermediate: 'bg-blue-100 text-blue-700',
-  advanced: 'bg-purple-100 text-purple-700',
-}
+// ─── MAIN COMPONENT ─────────────────────────────────────────────────────────
 
-export default async function CoursePage({ params }: { params: { slug: string } }) {
-  const course = await getCourse(params.slug)
-  if (!course) notFound()
-  const modules = await getModules(course.id)
-  const previewModule = modules.find((m: any) => m.is_preview) || modules[0]
-  const videos = courseVideos[params.slug] || []
-  const resources = courseResources[params.slug] || []
+type Tab = 'lesson' | 'videos' | 'resources'
+
+export default function CoursePage() {
+  const params = useParams()
+  const router = useRouter()
+  const slug = params.slug as string
+  const { user, isLoaded } = useUser()
+
+  const [course, setCourse] = useState<any>(null)
+  const [modules, setModules] = useState<any[]>([])
+  const [enrollment, setEnrollment] = useState<any>(null)
+  const [completed, setCompleted] = useState<Set<string>>(new Set())
+  const [activeModule, setActiveModule] = useState<any>(null)
+  const [tab, setTab] = useState<Tab>('lesson')
+  const [loading, setLoading] = useState(true)
+  const [enrolling, setEnrolling] = useState(false)
+  const [completing, setCompleting] = useState(false)
+
+  const videos = VIDEOS[slug] || []
+  const resources = RESOURCES[slug] || []
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/courses/${slug}`)
+      if (!res.ok) { setLoading(false); return }
+      const data = await res.json()
+      setCourse(data.course)
+      const mods = data.modules || []
+      setModules(mods)
+      if (mods.length > 0) setActiveModule(mods[0])
+
+      if (user) {
+        const enrRes = await fetch(`/api/enrollments?courseId=${data.course.id}`)
+        if (enrRes.ok) {
+          const enrData = await enrRes.json()
+          setEnrollment(enrData.enrollment || null)
+          setCompleted(new Set(enrData.completed || []))
+        }
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [slug, user])
+
+  useEffect(() => {
+    if (isLoaded) load()
+  }, [isLoaded, load])
+
+  async function enroll() {
+    if (!user) { router.push('/sign-in'); return }
+    setEnrolling(true)
+    try {
+      const res = await fetch('/api/enrollments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId: course.id }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setEnrollment(data.enrollment)
+      }
+    } finally {
+      setEnrolling(false)
+    }
+  }
+
+  async function markComplete(moduleId: string) {
+    if (!enrollment || completing) return
+    setCompleting(true)
+    try {
+      const res = await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enrollmentId: enrollment.id, moduleId }),
+      })
+      if (res.ok) {
+        setCompleted(prev => new Set([...prev, moduleId]))
+        const idx = modules.findIndex(m => m.id === moduleId)
+        if (idx < modules.length - 1) setActiveModule(modules[idx + 1])
+      }
+    } finally {
+      setCompleting(false)
+    }
+  }
+
+  const canAccess = (m: any) => m.is_preview || !!enrollment
+  const progress = modules.length > 0 ? Math.round((completed.size / modules.length) * 100) : 0
+  const activeIdx = modules.findIndex(m => m.id === activeModule?.id)
+
+  if (!isLoaded || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-[#07061f] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500">Loading course...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Course not found</h2>
+            <Link href="/training" className="text-amber-600 hover:underline text-sm">← Back to training</Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navigation />
 
-      {/* Hero */}
-      <div className="bg-navy-900 pt-24 pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 text-slate-400 text-sm mb-6">
-            <Link href="/" className="hover:text-white">Home</Link>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <Link href="/training" className="hover:text-white">Training</Link>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-white truncate max-w-xs">{course.title}</span>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-2">
-              <div className="flex flex-wrap gap-2 mb-4">
-                {course.is_certification ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-gold-500/20 text-gold-400">
-                    <Award className="w-3.5 h-3.5" /> Certification Course
-                  </span>
-                ) : (
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${levelColor[course.level] || 'bg-slate-200 text-slate-700'}`}>
-                    {levelLabel[course.level] || course.level}
-                  </span>
-                )}
-                {videos.length > 0 && (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-red-500/20 text-red-400">
-                    <Youtube className="w-3 h-3" /> {videos.length} Videos
-                  </span>
-                )}
-                {resources.length > 0 && (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
-                    <FileText className="w-3 h-3" /> {resources.length} Resources
-                  </span>
-                )}
+      {/* Course header */}
+      <div className="bg-[#07061f] text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Link href="/training" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-4 transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Training
+          </Link>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <span className="font-mono text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded">
+                  {course.course_code}
+                </span>
+                <span className="text-xs text-gray-400">{course.level}</span>
               </div>
-
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-snug" style={{ fontFamily: 'var(--font-playfair)' }}>
-                {course.title}
-              </h1>
-              <p className="text-slate-300 text-lg mb-4 leading-relaxed">{course.description}</p>
-              {course.long_description && <p className="text-slate-400 leading-relaxed">{course.long_description}</p>}
-
-              <div className="flex flex-wrap gap-6 mt-8 text-sm text-slate-300">
-                <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-gold-400" />{course.duration_minutes} min</div>
-                <div className="flex items-center gap-2"><BookOpen className="w-4 h-4 text-gold-400" />{modules.length} modules</div>
-                {videos.length > 0 && <div className="flex items-center gap-2"><Youtube className="w-4 h-4 text-red-400" />{videos.length} videos</div>}
-                {resources.length > 0 && <div className="flex items-center gap-2"><FileText className="w-4 h-4 text-emerald-400" />{resources.length} resources</div>}
-                {course.is_certification && <div className="flex items-center gap-2"><Award className="w-4 h-4 text-gold-400" />Earn CMCA</div>}
+              <h1 className="text-2xl font-bold mb-2">{course.title}</h1>
+              <p className="text-gray-300 text-sm max-w-2xl leading-relaxed">{course.description}</p>
+              <div className="flex flex-wrap items-center gap-5 mt-4 text-sm text-gray-400">
+                <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-amber-400" />{course.duration_hours}h total</span>
+                <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-amber-400" />{modules.length} modules</span>
+                {videos.length > 0 && <span className="flex items-center gap-1.5"><Youtube className="w-4 h-4 text-amber-400" />{videos.length} videos</span>}
               </div>
             </div>
-
-            {/* Enrollment card */}
-            <div>
-              <div className="bg-white rounded-2xl p-6 shadow-xl sticky top-24">
-                <div className="text-center mb-6">
-                  {course.is_member_free ? (
-                    <><div className="text-3xl font-bold text-navy-900 mb-1" style={{ fontFamily: 'var(--font-playfair)' }}>Free</div><div className="text-sm text-slate-500">with MCSA membership</div></>
-                  ) : (
-                    <><div className="text-3xl font-bold text-navy-900 mb-1">${(course.price_cents / 100).toFixed(0)}</div><div className="text-sm text-slate-500">one-time purchase</div></>
-                  )}
+            <div className="flex-shrink-0">
+              {enrollment ? (
+                <div className="bg-white/10 rounded-xl px-6 py-4 text-center">
+                  <div className="text-3xl font-bold text-amber-400">{progress}%</div>
+                  <div className="text-xs text-gray-400 mt-1">{completed.size} of {modules.length} modules</div>
+                  <div className="w-full bg-white/20 rounded-full h-1.5 mt-2">
+                    <div className="bg-amber-400 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                  </div>
                 </div>
-                <Link href="/login?redirect=/dashboard/courses" className="block w-full text-center bg-navy-900 hover:bg-navy-800 text-white font-bold py-3.5 rounded-xl mb-3 transition-colors">Enroll Now</Link>
-                <Link href="/membership" className="block w-full text-center border border-gold-400 text-gold-600 hover:bg-gold-50 font-semibold py-3 rounded-xl mb-4 transition-colors text-sm">Get All Courses — Join MCSA</Link>
-                <ul className="space-y-2.5 mt-2">
-                  {['All modules included', videos.length > 0 ? `${videos.length} embedded training videos` : null, resources.length > 0 ? `${resources.length} reference resources` : null, 'Progress tracking & notes', course.is_certification ? 'CMCA exam included' : 'Module knowledge checks'].filter(Boolean).map(item => (
-                    <li key={item as string} className="flex items-center gap-2 text-sm text-slate-600">
-                      <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />{item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              ) : user ? (
+                <button onClick={enroll} disabled={enrolling}
+                  className="bg-amber-400 text-[#07061f] font-semibold px-7 py-3 rounded-xl hover:bg-amber-300 transition-colors disabled:opacity-60 text-sm">
+                  {enrolling ? 'Enrolling...' : 'Enroll Now — Free'}
+                </button>
+              ) : (
+                <Link href="/sign-in"
+                  className="bg-amber-400 text-[#07061f] font-semibold px-7 py-3 rounded-xl hover:bg-amber-300 transition-colors inline-block text-sm">
+                  Sign In to Enroll
+                </Link>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-8">
+      {/* LMS body */}
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-            {/* Preview module */}
-            {previewModule && (
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="bg-navy-50 border-b border-slate-200 px-6 py-4 flex items-center gap-2">
-                  <Play className="w-4 h-4 text-navy-700" />
-                  <span className="font-semibold text-navy-900 text-sm">Preview: {previewModule.title}</span>
-                  <span className="ml-auto text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full">Free Preview</span>
-                </div>
-                <div className="p-6 md:p-8">
-                  <div className="prose-mcsa max-w-none">
-                    {previewModule.content?.split('\n').map((line: string, i: number) => {
-                      if (line.startsWith('## ')) return <h2 key={i}>{line.replace('## ', '')}</h2>
-                      if (line.startsWith('### ')) return <h3 key={i}>{line.replace('### ', '')}</h3>
-                      if (line.startsWith('- ')) return <li key={i} style={{ marginLeft: '1.5rem' }}>{line.replace('- ', '')}</li>
-                      if (line === '') return <br key={i} />
-                      return <p key={i}>{line}</p>
-                    })}
-                  </div>
-                </div>
+          {/* Sidebar */}
+          <aside className="lg:col-span-1">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden sticky top-4">
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Course Modules</h3>
               </div>
-            )}
-
-            {/* Embedded Videos */}
-            {videos.length > 0 && (
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
-                    <Youtube className="w-4 h-4 text-red-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-navy-900">Training Videos</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Curated manufacturer & industry videos</p>
-                  </div>
-                  <span className="ml-auto text-xs font-semibold bg-red-50 text-red-600 px-2.5 py-1 rounded-full border border-red-200">{videos.length} videos</span>
-                </div>
-                <div className="divide-y divide-slate-100">
-                  {videos.map((video, i) => (
-                    <div key={i} className="p-6">
-                      <div className="mb-4">
-                        <div className="text-xs font-semibold text-slate-400 mb-1">{video.module}</div>
-                        <h4 className="font-semibold text-navy-900 text-sm mb-1">{video.title}</h4>
-                        <p className="text-sm text-slate-600 leading-relaxed mb-1">{video.description}</p>
-                        <span className="text-xs text-slate-400">{video.source}</span>
+              <nav className="divide-y divide-gray-100">
+                {modules.map((mod, idx) => {
+                  const acc = canAccess(mod)
+                  const done = completed.has(mod.id)
+                  const active = activeModule?.id === mod.id
+                  return (
+                    <button key={mod.id}
+                      onClick={() => { if (acc) { setActiveModule(mod); setTab('lesson') } }}
+                      className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors
+                        ${active ? 'bg-amber-50 border-l-2 border-amber-400' : 'hover:bg-gray-50'}
+                        ${!acc ? 'cursor-default' : 'cursor-pointer'}`}>
+                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 transition-colors
+                        ${done ? 'bg-emerald-500' : active ? 'bg-amber-400' : 'bg-gray-100'}`}>
+                        {done
+                          ? <CheckCircle className="w-3.5 h-3.5 text-white" />
+                          : !acc
+                            ? <Lock className="w-3 h-3 text-gray-400" />
+                            : <span className="text-xs font-bold text-gray-600">{idx + 1}</span>
+                        }
                       </div>
-                      <div className="relative w-full rounded-xl overflow-hidden bg-slate-900" style={{ paddingTop: '56.25%' }}>
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-xs font-medium leading-snug ${active ? 'text-[#07061f]' : !acc ? 'text-gray-400' : 'text-gray-800'}`}>
+                          {mod.title}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className="text-xs text-gray-400">{mod.duration_minutes} min</span>
+                          {mod.is_preview && <span className="text-xs text-amber-600 font-medium">Free</span>}
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </nav>
+              {(videos.length > 0 || resources.length > 0) && (
+                <div className="border-t border-gray-100 p-3 space-y-1">
+                  {videos.length > 0 && (
+                    <button onClick={() => setTab('videos')}
+                      className={`w-full text-left flex items-center gap-2 px-2 py-2 rounded-lg text-sm transition-colors
+                        ${tab === 'videos' ? 'bg-amber-50 text-amber-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+                      <Youtube className="w-4 h-4 text-red-500 flex-shrink-0" />
+                      <span>{videos.length} reference videos</span>
+                    </button>
+                  )}
+                  {resources.length > 0 && (
+                    <button onClick={() => setTab('resources')}
+                      className={`w-full text-left flex items-center gap-2 px-2 py-2 rounded-lg text-sm transition-colors
+                        ${tab === 'resources' ? 'bg-amber-50 text-amber-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+                      <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                      <span>{resources.length} OEM resources</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <main className="lg:col-span-3">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+
+              {/* Tab bar */}
+              <div className="border-b border-gray-200 px-6 flex gap-0">
+                {(['lesson', ...(videos.length > 0 ? ['videos'] : []), ...(resources.length > 0 ? ['resources'] : [])] as Tab[]).map(t => (
+                  <button key={t} onClick={() => setTab(t)}
+                    className={`px-5 py-3.5 text-sm font-medium border-b-2 transition-colors capitalize -mb-px
+                      ${tab === t ? 'border-amber-400 text-[#07061f]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
+                    {t === 'videos' ? `Videos (${videos.length})` : t === 'resources' ? `Resources (${resources.length})` : 'Lesson'}
+                  </button>
+                ))}
+              </div>
+
+              {/* LESSON TAB */}
+              {tab === 'lesson' && activeModule && (
+                canAccess(activeModule) ? (
+                  <div>
+                    <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs text-gray-400 font-medium">
+                          Module {activeIdx + 1} of {modules.length}
+                        </span>
+                        {activeModule.is_preview && (
+                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                            Free Preview
+                          </span>
+                        )}
+                        {completed.has(activeModule.id) && (
+                          <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" /> Completed
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="text-xl font-semibold text-[#07061f]">{activeModule.title}</h2>
+                      <p className="text-sm text-gray-400 mt-1 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" /> {activeModule.duration_minutes} min read
+                      </p>
+                    </div>
+
+                    <div className="px-6 py-6">
+                      {activeModule.content
+                        ? renderMd(activeModule.content)
+                        : <div className="text-center py-12 text-gray-400">
+                            <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                            <p>Module content is being loaded.</p>
+                          </div>
+                      }
+                    </div>
+
+                    {enrollment && (
+                      <div className="px-6 pb-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+                        <button
+                          onClick={() => activeIdx > 0 && setActiveModule(modules[activeIdx - 1])}
+                          disabled={activeIdx === 0}
+                          className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 disabled:opacity-40 disabled:cursor-default transition-colors">
+                          ← Previous
+                        </button>
+                        {!completed.has(activeModule.id) ? (
+                          <button onClick={() => markComplete(activeModule.id)} disabled={completing}
+                            className="px-6 py-2 text-sm bg-amber-400 text-[#07061f] font-semibold rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-60">
+                            {completing ? 'Saving...' : 'Mark Complete & Continue →'}
+                          </button>
+                        ) : activeIdx < modules.length - 1 ? (
+                          <button onClick={() => setActiveModule(modules[activeIdx + 1])}
+                            className="px-6 py-2 text-sm bg-[#07061f] text-white font-semibold rounded-lg hover:bg-[#1e1b4b] transition-colors">
+                            Next Module →
+                          </button>
+                        ) : (
+                          <span className="text-sm text-emerald-600 font-semibold flex items-center gap-1.5">
+                            <CheckCircle className="w-4 h-4" /> Course Complete!
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {!enrollment && !user && (
+                      <div className="px-6 pb-6 pt-4 border-t border-gray-100 bg-amber-50 text-center">
+                        <p className="text-sm text-amber-800 mb-3">
+                          Sign in to enroll and track your progress across all modules.
+                        </p>
+                        <Link href="/sign-in"
+                          className="inline-flex items-center gap-2 px-5 py-2 bg-[#07061f] text-white text-sm font-semibold rounded-lg hover:bg-[#1e1b4b] transition-colors">
+                          Sign In to Continue
+                        </Link>
+                      </div>
+                    )}
+
+                    {!enrollment && user && (
+                      <div className="px-6 pb-6 pt-4 border-t border-gray-100 bg-amber-50 text-center">
+                        <p className="text-sm text-amber-800 mb-3">Enroll to unlock all modules and track your progress.</p>
+                        <button onClick={enroll} disabled={enrolling}
+                          className="inline-flex items-center gap-2 px-5 py-2 bg-amber-400 text-[#07061f] text-sm font-semibold rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-60">
+                          {enrolling ? 'Enrolling...' : 'Enroll Now — Free'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="px-6 py-16 text-center">
+                    <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Lock className="w-7 h-7 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Module Locked</h3>
+                    <p className="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
+                      {user ? 'Enroll in this course to unlock all modules and track your progress.'
+                        : 'Create a free account and enroll to access this module.'}
+                    </p>
+                    {user ? (
+                      <button onClick={enroll} disabled={enrolling}
+                        className="bg-amber-400 text-[#07061f] font-semibold px-6 py-2.5 rounded-lg hover:bg-amber-300 transition-colors text-sm disabled:opacity-60">
+                        {enrolling ? 'Enrolling...' : 'Enroll Now — Free'}
+                      </button>
+                    ) : (
+                      <Link href="/sign-up"
+                        className="bg-amber-400 text-[#07061f] font-semibold px-6 py-2.5 rounded-lg hover:bg-amber-300 transition-colors inline-block text-sm">
+                        Create Free Account
+                      </Link>
+                    )}
+                  </div>
+                )
+              )}
+
+              {/* VIDEOS TAB */}
+              {tab === 'videos' && (
+                <div className="p-6 space-y-8">
+                  <p className="text-sm text-gray-500">
+                    Publicly available manufacturer and training videos that supplement the course material.
+                    These are embedded directly from YouTube.
+                  </p>
+                  {videos.map((v, i) => (
+                    <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="aspect-video bg-gray-900">
                         <iframe
-                          className="absolute inset-0 w-full h-full"
-                          src={`https://www.youtube.com/embed/${video.youtubeId}?rel=0&modestbranding=1`}
-                          title={video.title}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          src={`https://www.youtube.com/embed/${v.id}`}
+                          className="w-full h-full"
                           allowFullScreen
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          title={v.title}
+                          loading="lazy"
                         />
+                      </div>
+                      <div className="p-4 bg-white">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">{v.mod}</span>
+                          <span className="text-xs text-gray-400">{v.src}</span>
+                        </div>
+                        <h4 className="font-semibold text-[#07061f] text-sm">{v.title}</h4>
+                        <p className="text-sm text-gray-500 mt-1 leading-relaxed">{v.desc}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Reference Resources */}
-            {resources.length > 0 && (
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-navy-900">Reference Resources</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">OEM documentation, vendor guides & standards</p>
-                  </div>
-                  <span className="ml-auto text-xs font-semibold bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full border border-emerald-200">{resources.length} resources</span>
-                </div>
-                <div className="divide-y divide-slate-100">
-                  {resources.map((resource, i) => (
-                    <a key={i} href={resource.url} target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 p-5 hover:bg-slate-50 transition-colors group">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base ${resource.type === 'pdf' ? 'bg-orange-50' : 'bg-blue-50'}`}>
-                        {resource.type === 'pdf' ? '📄' : '🔗'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-2 mb-1 flex-wrap">
-                          <span className="font-semibold text-navy-900 text-sm group-hover:text-navy-700 transition-colors">{resource.title}</span>
-                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border flex-shrink-0 ${badgeColors[resource.badge] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>{resource.badge}</span>
+              {/* RESOURCES TAB */}
+              {tab === 'resources' && (
+                <div className="p-6">
+                  <p className="text-sm text-gray-500 mb-5">
+                    OEM documentation, vendor references, and standards resources for {course.course_code}.
+                    All links open in a new tab.
+                  </p>
+                  <div className="space-y-3">
+                    {resources.map((r, i) => (
+                      <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all group">
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
+                          ${r.type === 'pdf' ? 'bg-red-100' : 'bg-blue-100'}`}>
+                          {r.type === 'pdf'
+                            ? <FileText className="w-5 h-5 text-red-600" />
+                            : <ExternalLink className="w-5 h-5 text-blue-600" />
+                          }
                         </div>
-                        <p className="text-sm text-slate-600 leading-relaxed">{resource.description}</p>
-                      </div>
-                      <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-navy-600 flex-shrink-0 mt-0.5 transition-colors" />
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Module list */}
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200">
-                <h3 className="font-bold text-navy-900">Course Modules</h3>
-                <p className="text-sm text-slate-500 mt-0.5">Enroll or log in to access all modules</p>
-              </div>
-              {modules.map((module: any, idx: number) => (
-                <div key={module.id} className={`flex items-center gap-4 px-6 py-4 border-b border-slate-100 last:border-0 ${module.is_preview ? 'bg-emerald-50/30' : ''}`}>
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${module.is_preview ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                    {module.is_preview ? <Play className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="font-medium text-[#07061f] text-sm group-hover:text-amber-700 transition-colors">
+                              {r.title}
+                            </span>
+                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">
+                              {r.badge}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500 leading-relaxed">{r.desc}</p>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5 group-hover:text-amber-400" />
+                      </a>
+                    ))}
+                    {resources.length === 0 && (
+                      <p className="text-gray-400 text-center py-8 text-sm">No external resources for this course.</p>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-navy-900">{module.title}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">{module.duration_minutes} min</div>
-                  </div>
-                  {module.is_preview && <span className="text-xs text-emerald-600 font-semibold">Free</span>}
                 </div>
-              ))}
+              )}
+
             </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-slate-200 p-6">
-              <h3 className="font-bold text-navy-900 mb-4">What you'll learn</h3>
-              <ul className="space-y-2.5">
-                {course.long_description?.split('.').filter((s: string) => s.trim().length > 20).slice(0, 5).map((point: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                    <CheckCircle className="w-4 h-4 text-navy-600 flex-shrink-0 mt-0.5" />{point.trim()}.
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {videos.length > 0 && (
-              <div className="bg-red-50 rounded-2xl border border-red-100 p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Youtube className="w-5 h-5 text-red-600" />
-                  <span className="font-bold text-red-800 text-sm">{videos.length} Training Videos Included</span>
-                </div>
-                <p className="text-xs text-red-700 leading-relaxed">Curated videos from OEM manufacturers showing real equipment, real manufacturing, and real system complexity — not found anywhere else in claims training.</p>
-              </div>
-            )}
-
-            {resources.length > 0 && (
-              <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className="w-5 h-5 text-emerald-600" />
-                  <span className="font-bold text-emerald-800 text-sm">{resources.length} Reference Resources</span>
-                </div>
-                <p className="text-xs text-emerald-700 leading-relaxed">Direct links to OEM documentation, vendor installation guides, and industry standards — the actual sources adjusters need in the field.</p>
-              </div>
-            )}
-
-            <div className="bg-white rounded-2xl border border-slate-200 p-6">
-              <h3 className="font-bold text-navy-900 mb-3">Complete the Curriculum</h3>
-              <p className="text-sm text-slate-600 mb-4">Earn the CMCA designation by completing all 10 core courses and passing the certification exam.</p>
-              <Link href="/accreditation" className="flex items-center gap-1 text-navy-700 font-semibold text-sm hover:gap-2 transition-all">
-                CMCA Requirements <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
+          </main>
         </div>
       </div>
 
