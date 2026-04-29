@@ -1,9 +1,10 @@
-export const dynamic = 'force-dynamic'
+'use client'
 
+import { useState, useEffect } from 'react'
 import Navigation from '@/components/layout/Navigation'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
-import { BookOpen, Clock, ArrowRight, Award } from 'lucide-react'
+import { BookOpen, Clock, ArrowRight, Award, Loader2 } from 'lucide-react'
 
 const levelColors: Record<string, string> = {
   Beginner: 'bg-emerald-100 text-emerald-700',
@@ -12,22 +13,28 @@ const levelColors: Record<string, string> = {
   Certification: 'bg-amber-100 text-amber-700',
 }
 
-async function getCourses() {
-  try {
-    const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://mcsa-platform.vercel.app'
-    const res = await fetch(`${base}/api/courses`, {
-      cache: 'no-store',
-    })
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.courses || []
-  } catch {
-    return []
-  }
-}
+export default function TrainingPage() {
+  const [courses, setCourses] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-export default async function TrainingPage() {
-  const courses = await getCourses()
+  useEffect(() => {
+    fetch('/api/courses', { cache: 'no-store' })
+      .then(res => {
+        console.log('[training] /api/courses status:', res.status)
+        return res.json()
+      })
+      .then(data => {
+        console.log('[training] courses received:', data)
+        setCourses(data.courses || data || [])
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('[training] fetch error:', err)
+        setError('Failed to load courses')
+        setLoading(false)
+      })
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,16 +66,32 @@ export default async function TrainingPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {courses.length === 0 ? (
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="text-center py-20">
+            <p className="text-red-500 font-medium">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 text-sm text-amber-600 underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && courses.length === 0 && (
           <div className="text-center py-20">
             <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">Courses loading...</h3>
-            <p className="text-gray-500 text-sm">
-              If this persists, the database may still be seeding.{' '}
-              <Link href="/training" className="text-amber-600 underline">Refresh the page.</Link>
-            </p>
+            <p className="text-gray-500">No courses found.</p>
           </div>
-        ) : (
+        )}
+
+        {!loading && !error && courses.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course: any) => (
               <Link
