@@ -2,9 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install --legacy-peer-deps",
-  "outputDirectory": ".next",
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "https://izqenzzlzuiqbyodvuxo.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6cWVuenpsenVpcWJ5b2R2dXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MzMyOTEsImV4cCI6MjA5MjQwOTI5MX0.IgdFNnq7P7_Z7S1M_JKAwhgtjwOc43NyJohijKP1JxE"
-  }
+  "outputDirectory": ".next"
 }
