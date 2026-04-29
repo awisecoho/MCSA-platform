@@ -1,8 +1,9 @@
+export const dynamic = 'force-dynamic'
+
 import Navigation from '@/components/layout/Navigation'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
 import { BookOpen, Clock, ArrowRight, Award } from 'lucide-react'
-import { sql } from '@/lib/db'
 
 const levelColors: Record<string, string> = {
   Beginner: 'bg-emerald-100 text-emerald-700',
@@ -11,17 +12,22 @@ const levelColors: Record<string, string> = {
   Certification: 'bg-amber-100 text-amber-700',
 }
 
-export default async function TrainingPage() {
-  let courses: any[] = []
+async function getCourses() {
   try {
-    courses = await sql`
-      SELECT * FROM mcsa_courses
-      WHERE is_published = true
-      ORDER BY order_index
-    `
+    const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://mcsa-platform.vercel.app'
+    const res = await fetch(`${base}/api/courses`, {
+      cache: 'no-store',
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.courses || []
   } catch {
-    // DB not seeded yet — show placeholder
+    return []
   }
+}
+
+export default async function TrainingPage() {
+  const courses = await getCourses()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,9 +45,15 @@ export default async function TrainingPage() {
             through fire apparatus and the CMCA certification exam.
           </p>
           <div className="flex flex-wrap gap-6 mt-8 text-sm text-gray-400">
-            <span className="flex items-center gap-2"><BookOpen className="w-4 h-4 text-amber-400" />12 courses</span>
-            <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-amber-400" />50 modules</span>
-            <span className="flex items-center gap-2"><Award className="w-4 h-4 text-amber-400" />CMCA certification</span>
+            <span className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-amber-400" />12 courses
+            </span>
+            <span className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-400" />50 modules
+            </span>
+            <span className="flex items-center gap-2">
+              <Award className="w-4 h-4 text-amber-400" />CMCA certification
+            </span>
           </div>
         </div>
       </div>
@@ -51,7 +63,10 @@ export default async function TrainingPage() {
           <div className="text-center py-20">
             <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-600 mb-2">Courses loading...</h3>
-            <p className="text-gray-500">Course data is being seeded into the database.</p>
+            <p className="text-gray-500 text-sm">
+              If this persists, the database may still be seeding.{' '}
+              <Link href="/training" className="text-amber-600 underline">Refresh the page.</Link>
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
