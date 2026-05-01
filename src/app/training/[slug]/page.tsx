@@ -11,6 +11,16 @@ import {
   FileText, Youtube, ArrowLeft, ChevronRight, Play
 } from 'lucide-react'
 
+// ─── CLICK TRACKING ──────────────────────────────────────────────────────────
+
+function logResourceClick(resourceId: string) {
+  fetch('/api/resource-click', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resourceId }),
+  }).catch(() => {})
+}
+
 // ─── VIDEO & RESOURCE DATA ───────────────────────────────────────────────────
 
 const VIDEOS: Record<string, { title: string; desc: string; id: string; src: string; mod: string }[]> = {
@@ -36,7 +46,8 @@ const VIDEOS: Record<string, { title: string; desc: string; id: string; src: str
   ],
 }
 
-const RESOURCES: Record<string, { title: string; desc: string; url: string; type: 'pdf' | 'web'; badge: string }[]> = {
+// Resources now loaded from DB — this object is kept only as a fallback stub
+const RESOURCES_STUB: Record<string, any[]> = {
   'mcsa-102-vehicle-classification': [
     { title: 'Ford Police Interceptor Utility — Factory Features', desc: 'PIU features — 250A alternator, pre-wired circuits, factory differences from retail Explorer.', url: 'https://www.ford.com/police-vehicles/features/upfit/', type: 'web', badge: 'OEM Reference' },
   ],
@@ -178,8 +189,9 @@ export default function CoursePage() {
   const [enrolling, setEnrolling] = useState(false)
   const [completing, setCompleting] = useState(false)
 
+  const [dbResources, setDbResources] = useState<any[]>([])
   const videos = VIDEOS[slug] || []
-  const resources = RESOURCES[slug] || []
+  const resources = dbResources.length > 0 ? dbResources : (RESOURCES_STUB[slug] || [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -200,6 +212,11 @@ export default function CoursePage() {
           setCompleted(new Set(enrData.completed || []))
         }
       }
+      // Fetch DB resources for this course
+      try {
+        const rRes = await fetch(`/api/resources?course=${slug}`, { cache: 'no-store' })
+        if (rRes.ok) { const rd = await rRes.json(); setDbResources(rd.resources || []) }
+      } catch { /* non-fatal */ }
     } finally {
       setLoading(false)
     }
@@ -555,37 +572,79 @@ export default function CoursePage() {
               {tab === 'resources' && (
                 <div className="p-6">
                   <p className="text-sm text-gray-500 mb-5">
-                    OEM documentation, vendor references, and standards resources for {course.course_code}.
+                    OEM documentation, installation guides, and standards references for {course.course_code}.
                     All links open in a new tab.
                   </p>
-                  <div className="space-y-3">
-                    {resources.map((r, i) => (
-                      <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all group">
-                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
-                          ${r.type === 'pdf' ? 'bg-red-100' : 'bg-blue-100'}`}>
-                          {r.type === 'pdf'
-                            ? <FileText className="w-5 h-5 text-red-600" />
-                            : <ExternalLink className="w-5 h-5 text-blue-600" />
-                          }
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="font-medium text-[#07061f] text-sm group-hover:text-amber-700 transition-colors">
-                              {r.title}
-                            </span>
-                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">
-                              {r.badge}
-                            </span>
+                  {resources.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8 text-sm">No resources for this course yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {resources.map((r: any, i: number) => {
+                        // DB resource shape: {id, title, description, url, type, category, source_name, access_level}
+                        // Stub shape: {title, desc, url, type, badge}
+                        const isDb = !!r.id
+                        const title = r.title
+                        const desc = isDb ? r.description : r.desc
+                        const url = r.url
+                        const type = r.type
+                        const badge = isDb ? (r.category || r.type?.toUpperCase()) : r.badge
+                        const locked = isDb && r.access_level === 'member' && !user
+                        const isPdf = type === 'pdf'
+                        const isVideo = type === 'video' || type === 'video_library'
+
+                        return locked ? (
+                          <div key={r.id || i} className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl bg-gray-50 opacity-75">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-gray-200">
+                              <Lock className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="font-medium text-gray-500 text-sm">{title}</span>
+                                <span className="text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full flex-shrink-0 font-medium">Member Only</span>
+                              </div>
+                              <p className="text-sm text-gray-400">{desc}</p>
+                            </div>
+                            <Link href="/sign-up" className="text-xs text-amber-600 font-semibold hover:underline flex-shrink-0 mt-1">
+                              Join to access
+                            </Link>
                           </div>
-                          <p className="text-sm text-gray-500 leading-relaxed">{r.desc}</p>
-                        </div>
-                        <ExternalLink className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5 group-hover:text-amber-400" />
-                      </a>
-                    ))}
-                    {resources.length === 0 && (
-                      <p className="text-gray-400 text-center py-8 text-sm">No external resources for this course.</p>
-                    )}
+                        ) : (
+                          <a key={r.id || i} href={url || '#'} target="_blank" rel="noopener noreferrer"
+                            onClick={() => r.id && logResourceClick(r.id)}
+                            className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all group">
+                            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
+                              ${isPdf ? 'bg-red-100' : isVideo ? 'bg-purple-100' : 'bg-blue-100'}`}>
+                              {isPdf
+                                ? <FileText className="w-5 h-5 text-red-600" />
+                                : isVideo
+                                  ? <Youtube className="w-5 h-5 text-purple-600" />
+                                  : <ExternalLink className="w-5 h-5 text-blue-600" />
+                              }
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                <span className="font-medium text-[#07061f] text-sm group-hover:text-amber-700 transition-colors">
+                                  {title}
+                                </span>
+                                {badge && (
+                                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{badge}</span>
+                                )}
+                                {isDb && r.source_name && (
+                                  <span className="text-xs text-gray-400 flex-shrink-0">{r.source_name}</span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+                            </div>
+                            <ExternalLink className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5 group-hover:text-amber-400" />
+                          </a>
+                        )
+                      })}
+                    </div>
+                  )}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <Link href="/resources" className="text-xs text-amber-600 font-medium hover:underline">
+                      View full resource library →
+                    </Link>
                   </div>
                 </div>
               )}
