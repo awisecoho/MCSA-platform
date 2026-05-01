@@ -1,0 +1,67 @@
+{
+  "Police Vehicle": [
+    "Emergency lightbar",
+    "Grille/intersection lights",
+    "Siren amplifier",
+    "Siren speaker",
+    "Push bumper",
+    "Spotlight",
+    "Center console",
+    "Partition / prisoner cage",
+    "Rear seat / transport insert",
+    "Radio head / microphone",
+    "Antenna / roof penetrations",
+    "Power distribution / wiring harness"
+  ],
+  "Ambulance": [
+    "Modular ambulance body",
+    "Cab-to-module pass-through",
+    "Cot fastener / retention system",
+    "Oxygen cabinet/system",
+    "Interior cabinetry",
+    "Shoreline / inverter / charger",
+    "Warning lights",
+    "HVAC module unit",
+    "Scene lighting",
+    "Rear doors / compartment doors",
+    "Module mounting points"
+  ],
+  "Fire Apparatus": [
+    "Pump panel",
+    "Fire pump",
+    "Pump plumbing / valves",
+    "Water tank",
+    "Aerial ladder / boom",
+    "Turntable",
+    "Outriggers / stabilizers",
+    "Compartments / roll-up doors",
+    "Generator",
+    "Scene lighting",
+    "Hose bed",
+    "Steps / grab handles"
+  ],
+  "Public Works": [
+    "Snow plow blade",
+    "Plow frame / mount",
+    "Hydraulic pump",
+    "Hydraulic hoses/cylinders",
+    "Dump body",
+    "Tailgate",
+    "Salt spreader",
+    "PTO",
+    "Arrow board",
+    "Tool boxes / storage"
+  ],
+  "Sweeper / Vacuum Truck": [
+    "Debris hopper",
+    "Vacuum fan",
+    "Boom hose",
+    "Suction tube",
+    "Side broom assembly",
+    "Main broom",
+    "Water tank",
+    "Spray nozzles",
+    "Hydraulic pump/lines",
+    "Control panel"
+  ]
+}

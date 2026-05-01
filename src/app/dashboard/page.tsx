@@ -4,7 +4,7 @@ import Navigation from '@/components/layout/Navigation'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
 import { sql } from '@/lib/db'
-import { BookOpen, Award, ArrowRight, Clock } from 'lucide-react'
+import { BookOpen, Award, ArrowRight, Clock, FileText, Plus } from 'lucide-react'
 
 export default async function Dashboard() {
   const { userId } = await auth()
@@ -78,6 +78,32 @@ export default async function Dashboard() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Tools */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <Link href="/tools/claim-package-builder"
+            className="bg-[#07061f] rounded-xl p-5 flex items-center gap-4 hover:bg-[#1e1b4b] transition-colors group">
+            <div className="w-10 h-10 bg-amber-400 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText className="w-5 h-5 text-[#07061f]" />
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-white text-sm">Claim Package Builder</div>
+              <div className="text-xs text-gray-400 mt-0.5">Build a complete MCSA-standard claim file</div>
+            </div>
+            <Plus className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+          </Link>
+          <Link href="/tools/saved-packages"
+            className="bg-white border border-gray-200 rounded-xl p-5 flex items-center gap-4 hover:border-amber-300 hover:shadow-sm transition-all group">
+            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText className="w-5 h-5 text-gray-600" />
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900 text-sm">Saved Claim Packages</div>
+              <div className="text-xs text-gray-400 mt-0.5">View, reopen, and export saved packages</div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-amber-500 transition-colors" />
+          </Link>
         </div>
 
         {/* Enrolled courses */}

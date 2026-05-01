@@ -115,6 +115,41 @@ export async function GET(req: Request) {
       clerk_id TEXT, resource_id UUID, event_type TEXT NOT NULL,
       metadata JSONB DEFAULT '{}', created_at TIMESTAMPTZ DEFAULT NOW()
     )`)
+    // Claim Package Builder tables
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_claim_packages (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      clerk_id TEXT NOT NULL, claim_number TEXT, carrier_name TEXT, adjuster_name TEXT,
+      municipality_name TEXT, department TEXT, loss_date DATE, inspection_date DATE,
+      loss_type TEXT, loss_location TEXT, contact_person TEXT, contact_phone TEXT,
+      unit_type TEXT, tier TEXT, year INTEGER, make TEXT, model TEXT, vin TEXT,
+      mileage NUMERIC, hours NUMERIC, unit_number TEXT, in_service_status TEXT,
+      specialty_body_manufacturer TEXT, specialty_body_serial TEXT,
+      file_status TEXT DEFAULT 'Draft', risk_flags JSONB DEFAULT '[]',
+      form_data JSONB DEFAULT '{}', compliance_score TEXT, missing_items TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_photo_checklist_items (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      package_id UUID NOT NULL REFERENCES mcsa_claim_packages(id) ON DELETE CASCADE,
+      photo_item TEXT NOT NULL, status TEXT DEFAULT 'Missing',
+      missing_reason TEXT, notes TEXT, sort_order INTEGER DEFAULT 0
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_component_inventory_items (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      package_id UUID NOT NULL REFERENCES mcsa_claim_packages(id) ON DELETE CASCADE,
+      component_name TEXT NOT NULL, system_category TEXT, oem_aftermarket TEXT,
+      condition TEXT, recommendation TEXT, documentation_needed TEXT,
+      notes TEXT, sort_order INTEGER DEFAULT 0
+    )`)
+    await client.query(`CREATE TABLE IF NOT EXISTS mcsa_claim_exports (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      package_id UUID NOT NULL REFERENCES mcsa_claim_packages(id) ON DELETE CASCADE,
+      clerk_id TEXT NOT NULL, export_type TEXT NOT NULL, file_url TEXT,
+      watermarked BOOLEAN DEFAULT TRUE, created_at TIMESTAMPTZ DEFAULT NOW()
+    )`)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_claim_pkgs_clerk ON mcsa_claim_packages(clerk_id)`).catch(()=>{})
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_photo_pkg ON mcsa_photo_checklist_items(package_id)`).catch(()=>{})
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_comp_pkg ON mcsa_component_inventory_items(package_id)`).catch(()=>{})
     await client.query(`CREATE TABLE IF NOT EXISTS mcsa_membership_plans (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       slug TEXT UNIQUE NOT NULL, name TEXT NOT NULL,

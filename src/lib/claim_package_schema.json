@@ -1,0 +1,609 @@
+{
+  "version": "1.0",
+  "product": "MCSA Claim Package Builder",
+  "wizard_steps": [
+    {
+      "id": "claim_info",
+      "label": "Claim Info",
+      "fields": [
+        {
+          "name": "claim_number",
+          "label": "Claim Number",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "carrier_name",
+          "label": "Carrier Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "adjuster_name",
+          "label": "Adjuster Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "municipality_name",
+          "label": "Municipality Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "department",
+          "label": "Department",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Police",
+            "Fire",
+            "EMS",
+            "Public Works",
+            "Highway Department",
+            "Parks/Recreation",
+            "Other"
+          ]
+        },
+        {
+          "name": "loss_date",
+          "label": "Loss Date",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "inspection_date",
+          "label": "Inspection Date",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "loss_type",
+          "label": "Loss Type",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Collision",
+            "Fire",
+            "Mechanical",
+            "Weather",
+            "Vandalism",
+            "Water/Flood",
+            "Theft",
+            "Other"
+          ]
+        },
+        {
+          "name": "loss_location",
+          "label": "Location of Loss",
+          "type": "text"
+        },
+        {
+          "name": "contact_person",
+          "label": "Municipality Contact",
+          "type": "text"
+        },
+        {
+          "name": "contact_phone",
+          "label": "Contact Phone",
+          "type": "tel"
+        },
+        {
+          "name": "assignment_notes",
+          "label": "Assignment Notes",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "id": "unit_classification",
+      "label": "Unit Classification",
+      "fields": [
+        {
+          "name": "unit_type",
+          "label": "Unit Type",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Police Vehicle",
+            "Ambulance",
+            "Fire Apparatus",
+            "Public Works",
+            "Sweeper / Vacuum Truck",
+            "Other Municipal Fleet"
+          ]
+        },
+        {
+          "name": "tier",
+          "label": "MCSA Tier",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Tier 1 - Standard Fleet",
+            "Tier 2 - Modified Commercial",
+            "Tier 3 - Integrated Apparatus / Specialty Unit"
+          ]
+        },
+        {
+          "name": "year",
+          "label": "Year",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "make",
+          "label": "Make",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "model",
+          "label": "Model",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "vin",
+          "label": "VIN / Serial Number",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "mileage",
+          "label": "Mileage",
+          "type": "number"
+        },
+        {
+          "name": "hours",
+          "label": "Engine / Equipment Hours",
+          "type": "number"
+        },
+        {
+          "name": "unit_number",
+          "label": "Fleet / Unit Number",
+          "type": "text"
+        },
+        {
+          "name": "in_service_status",
+          "label": "In-Service Status",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Active",
+            "Out of Service",
+            "Limited Use",
+            "Reserve Unit",
+            "Unknown"
+          ]
+        },
+        {
+          "name": "specialty_body_manufacturer",
+          "label": "Specialty Body / Apparatus Manufacturer",
+          "type": "text"
+        },
+        {
+          "name": "specialty_body_serial",
+          "label": "Body / Module / Apparatus Serial Number",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "scene_inspection",
+      "label": "Scene Inspection",
+      "fields": [
+        {
+          "name": "drivable",
+          "label": "Drivable / Movable",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "safety_issues_present",
+          "label": "Safety Issues Present",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "structural_damage",
+          "label": "Structural Damage Observed",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "equipment_damage",
+          "label": "Specialty Equipment Damage Observed",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "fluids_or_leaks",
+          "label": "Fluids / Leaks Observed",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "electrical_issues",
+          "label": "Electrical Issues Observed",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "initial_damage_summary",
+          "label": "Initial Damage Summary",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "name": "department_impact",
+          "label": "Department Operational Impact",
+          "type": "select",
+          "required": true,
+          "options": [
+            "None",
+            "Limited",
+            "Critical - affects operations",
+            "Unknown"
+          ]
+        },
+        {
+          "name": "downtime_concern",
+          "label": "Downtime Concern",
+          "type": "select",
+          "options": [
+            "Low",
+            "Moderate",
+            "High",
+            "Critical",
+            "Unknown"
+          ]
+        },
+        {
+          "name": "immediate_actions_needed",
+          "label": "Immediate Actions Needed",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "id": "photo_checklist",
+      "label": "Photo Checklist",
+      "base_items": [
+        "VIN / serial plate",
+        "Odometer / hour meter",
+        "4-corner exterior",
+        "Damage overview",
+        "Damage close-ups",
+        "Interior overview",
+        "Tire/wheel area",
+        "Undercarriage where accessible",
+        "Equipment overview",
+        "Prior damage / unrelated condition"
+      ],
+      "conditional_items_by_unit_type": {
+        "Police Vehicle": [
+          "Emergency lights",
+          "Siren speaker",
+          "Console",
+          "Cage / partition",
+          "Radio equipment",
+          "Push bumper",
+          "Spotlight",
+          "Prisoner transport area",
+          "Weapon/rack mounts"
+        ],
+        "Ambulance": [
+          "Module exterior",
+          "Module interior",
+          "Cot/retention system",
+          "Oxygen system",
+          "Shoreline / inverter",
+          "HVAC",
+          "Cab-to-module pass-through",
+          "Warning lights",
+          "Cabinetry"
+        ],
+        "Fire Apparatus": [
+          "Pump panel",
+          "Pump plumbing",
+          "Tank fill/discharge",
+          "Compartments",
+          "Aerial/ladder system",
+          "Stabilizers/outriggers",
+          "Generator",
+          "Lighting",
+          "Hose bed"
+        ],
+        "Public Works": [
+          "Plow frame",
+          "Hydraulic pump",
+          "Hydraulic hoses/cylinders",
+          "Dump body",
+          "Spreader",
+          "PTO",
+          "Lighting/arrow board",
+          "Tool boxes"
+        ],
+        "Sweeper / Vacuum Truck": [
+          "Debris hopper",
+          "Vacuum fan",
+          "Boom hose",
+          "Broom assemblies",
+          "Water tank",
+          "Spray nozzles",
+          "Hydraulic lines",
+          "Control panel"
+        ],
+        "Other Municipal Fleet": [
+          "Specialty equipment overview",
+          "Mounting points",
+          "Controls",
+          "Accessories",
+          "Serial plates"
+        ]
+      }
+    },
+    {
+      "id": "component_inventory",
+      "label": "Component Inventory",
+      "table_columns": [
+        "Component Name",
+        "System",
+        "OEM / Aftermarket / Unknown",
+        "Condition",
+        "Repair / Replace / Inspect",
+        "Documentation Needed",
+        "Notes"
+      ]
+    },
+    {
+      "id": "repair_labor_review",
+      "label": "Repair / Labor Review",
+      "fields": [
+        {
+          "name": "repair_facility_name",
+          "label": "Repair Facility Name",
+          "type": "text"
+        },
+        {
+          "name": "facility_type",
+          "label": "Facility Type",
+          "type": "select",
+          "options": [
+            "Auto Body Shop",
+            "Truck Repair",
+            "Apparatus Dealer",
+            "OEM / Manufacturer",
+            "Specialty Upfitter",
+            "Municipality Shop",
+            "Unknown"
+          ]
+        },
+        {
+          "name": "oem_involvement_required",
+          "label": "OEM / Dealer Involvement Required",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "labor_type",
+          "label": "Primary Labor Type",
+          "type": "select",
+          "options": [
+            "Body",
+            "Mechanical",
+            "Electrical",
+            "Fabrication",
+            "Hydraulic",
+            "Paint/refinish",
+            "Diagnostic",
+            "Specialty apparatus"
+          ]
+        },
+        {
+          "name": "estimated_labor_hours",
+          "label": "Estimated Labor Hours",
+          "type": "number"
+        },
+        {
+          "name": "labor_variance_flag",
+          "label": "Labor Variance Flag",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "variance_reason",
+          "label": "Labor Variance Explanation",
+          "type": "textarea"
+        },
+        {
+          "name": "estimate_review_notes",
+          "label": "Estimate Review Notes",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "id": "valuation_total_loss",
+      "label": "Valuation / Total Loss",
+      "fields": [
+        {
+          "name": "estimated_repair_cost",
+          "label": "Estimated Repair Cost",
+          "type": "currency"
+        },
+        {
+          "name": "estimated_acv",
+          "label": "Estimated ACV",
+          "type": "currency"
+        },
+        {
+          "name": "replacement_cost_indicator",
+          "label": "Replacement Cost Indicator",
+          "type": "currency"
+        },
+        {
+          "name": "salvage_value",
+          "label": "Salvage Value",
+          "type": "currency"
+        },
+        {
+          "name": "total_loss_likely",
+          "label": "Total Loss Likely",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "valuation_source",
+          "label": "Valuation Source",
+          "type": "multi_select",
+          "options": [
+            "Dealer quote",
+            "OEM quote",
+            "Invoice",
+            "Comparable sale",
+            "Market listing",
+            "Municipality records",
+            "Appraisal judgement",
+            "Other"
+          ]
+        },
+        {
+          "name": "lead_time_impact",
+          "label": "Replacement Lead Time Impact",
+          "type": "select",
+          "options": [
+            "None",
+            "Moderate",
+            "High",
+            "Critical",
+            "Unknown"
+          ]
+        },
+        {
+          "name": "valuation_notes",
+          "label": "Valuation Notes",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "id": "compliance_review",
+      "label": "Compliance Review",
+      "fields": [
+        {
+          "name": "photo_complete",
+          "label": "Photo Complete",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "documentation_complete",
+          "label": "Documentation Complete",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "estimate_supported",
+          "label": "Estimate Supported",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "oem_requirements_addressed",
+          "label": "OEM Requirements Addressed",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "component_inventory_complete",
+          "label": "Component Inventory Complete",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "valuation_supported",
+          "label": "Valuation Supported",
+          "type": "boolean"
+        },
+        {
+          "name": "compliance_score",
+          "label": "Compliance Score",
+          "type": "select",
+          "options": [
+            "Pass",
+            "Conditional",
+            "Fail"
+          ]
+        },
+        {
+          "name": "missing_items",
+          "label": "Missing Items",
+          "type": "textarea"
+        },
+        {
+          "name": "claim_manager_notes",
+          "label": "Claim Manager Notes",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "id": "export_packet",
+      "label": "Export Packet",
+      "fields": [
+        {
+          "name": "packet_type",
+          "label": "Packet Type",
+          "type": "select",
+          "options": [
+            "Public Preview Watermarked",
+            "Member Clean Export",
+            "Admin/Internal Review"
+          ]
+        },
+        {
+          "name": "include_photos_index",
+          "label": "Include Photo Index",
+          "type": "boolean"
+        },
+        {
+          "name": "include_component_inventory",
+          "label": "Include Component Inventory",
+          "type": "boolean"
+        },
+        {
+          "name": "include_missing_items",
+          "label": "Include Missing Items",
+          "type": "boolean"
+        },
+        {
+          "name": "include_compliance_score",
+          "label": "Include Compliance Score",
+          "type": "boolean"
+        }
+      ]
+    }
+  ],
+  "global_statuses": [
+    "Draft",
+    "Field Complete",
+    "Pending Documentation",
+    "Ready for Estimate Review",
+    "Ready for Carrier Submission",
+    "Returned for Correction",
+    "Closed"
+  ],
+  "risk_flags": [
+    "High labor variance",
+    "Specialty equipment involved",
+    "OEM/dealer required",
+    "Estimate likely inflated",
+    "Valuation support weak",
+    "Total loss exposure",
+    "Municipal downtime concern",
+    "Safety/return-to-service concern",
+    "Insufficient photos",
+    "Missing serial/VIN evidence"
+  ]
+}
