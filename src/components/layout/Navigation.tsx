@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs'
 import { Menu, X, ChevronDown, Shield } from 'lucide-react'
 
 const trainingLinks = [
@@ -14,10 +14,21 @@ const trainingLinks = [
   { href: '/training/mcsa-109-fire-apparatus', label: 'MCSA-109: Fire Apparatus' },
 ]
 
+const ROLE_BADGE: Record<string, { label: string; color: string }> = {
+  admin:  { label: 'Admin',   color: 'bg-red-100 text-red-700 border border-red-200' },
+  tester: { label: 'Tester',  color: 'bg-violet-100 text-violet-700 border border-violet-200' },
+  member: { label: 'Member',  color: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
+}
+
 export default function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [trainingOpen, setTrainingOpen] = useState(false)
   const pathname = usePathname()
+  const { user } = useUser()
+  const meta = user?.publicMetadata as Record<string, string> | undefined
+  const role = meta?.role as string | undefined
+  const badge = role ? ROLE_BADGE[role] : null
+  const isAdmin = role === 'admin'
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -40,8 +51,6 @@ export default function Navigation() {
             <Link href="/about" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/about' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
               About
             </Link>
-
-            {/* Training dropdown */}
             <div className="relative" onMouseEnter={() => setTrainingOpen(true)} onMouseLeave={() => setTrainingOpen(false)}>
               <Link href="/training" className={`flex items-center gap-1 px-3 py-2 text-sm rounded-lg transition-colors ${pathname.startsWith('/training') ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
                 Training <ChevronDown className="w-3.5 h-3.5" />
@@ -56,7 +65,6 @@ export default function Navigation() {
                 </div>
               )}
             </div>
-
             <Link href="/accreditation" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/accreditation' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
               Accreditation
             </Link>
@@ -66,22 +74,28 @@ export default function Navigation() {
             <Link href="/membership" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/membership' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
               Membership
             </Link>
+            {isAdmin && (
+              <Link href="/admin/invite-tester" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname.startsWith('/admin') ? 'text-red-700 bg-red-50' : 'text-red-600 hover:text-red-700 hover:bg-red-50'}`}>
+                Admin
+              </Link>
+            )}
           </div>
 
           {/* Auth */}
           <div className="hidden md:flex items-center gap-3">
             <SignedOut>
-              <Link href="/sign-in" className="text-sm text-gray-600 hover:text-[#07061f] transition-colors">
-                Sign In
-              </Link>
+              <Link href="/sign-in" className="text-sm text-gray-600 hover:text-[#07061f] transition-colors">Sign In</Link>
               <Link href="/sign-up" className="bg-[#f59e0b] text-[#07061f] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#fbbf24] transition-colors">
                 Join MCSA
               </Link>
             </SignedOut>
             <SignedIn>
-              <Link href="/dashboard" className="text-sm text-gray-600 hover:text-[#07061f] transition-colors">
-                Dashboard
-              </Link>
+              {badge && (
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.color}`}>
+                  {badge.label}
+                </span>
+              )}
+              <Link href="/dashboard" className="text-sm text-gray-600 hover:text-[#07061f] transition-colors">Dashboard</Link>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
           </div>
@@ -101,12 +115,14 @@ export default function Navigation() {
           <Link href="/accreditation" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Accreditation</Link>
           <Link href="/resources" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Resources</Link>
           <Link href="/membership" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Membership</Link>
-          <div className="pt-2 border-t border-gray-100 flex gap-2">
+          {isAdmin && <Link href="/admin/invite-tester" className="block px-3 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50" onClick={() => setMobileOpen(false)}>Admin</Link>}
+          <div className="pt-2 border-t border-gray-100 flex items-center gap-2">
             <SignedOut>
               <Link href="/sign-in" className="flex-1 text-center py-2 text-sm border border-gray-200 rounded-lg text-gray-700" onClick={() => setMobileOpen(false)}>Sign In</Link>
               <Link href="/sign-up" className="flex-1 text-center py-2 text-sm bg-[#f59e0b] text-[#07061f] font-semibold rounded-lg" onClick={() => setMobileOpen(false)}>Join MCSA</Link>
             </SignedOut>
             <SignedIn>
+              {badge && <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.color}`}>{badge.label}</span>}
               <Link href="/dashboard" className="flex-1 text-center py-2 text-sm border border-gray-200 rounded-lg text-gray-700" onClick={() => setMobileOpen(false)}>Dashboard</Link>
             </SignedIn>
           </div>

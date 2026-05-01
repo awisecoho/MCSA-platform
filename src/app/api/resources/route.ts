@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { pool } from '@/lib/db'
-import { auth } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 
 export async function GET(req: Request) {
   const { userId } = await auth()
@@ -11,6 +11,17 @@ export async function GET(req: Request) {
   const course   = searchParams.get('course')
   const category = searchParams.get('category')
   const search   = searchParams.get('q')
+
+  // Testers get viewing access but no download links for member resources
+  let isTester = false
+  if (userId) {
+    try {
+      const clerk = await clerkClient()
+      const u = await clerk.users.getUser(userId)
+      const meta = u.publicMetadata as Record<string, string>
+      isTester = meta?.role === 'tester'
+    } catch {}
+  }
 
   const client = await pool.connect()
   try {
@@ -24,18 +35,15 @@ export async function GET(req: Request) {
       query += ` AND (title ILIKE $${i} OR description ILIKE $${i} OR source_name ILIKE $${i})`
       params.push(`%${search}%`); i++
     }
-
-    // Non-members: hide the url of member resources (but show the card)
-    if (!userId) {
-      query += ` ORDER BY access_level, course_slug, title`
-    } else {
-      query += ` ORDER BY course_slug, category, title`
-    }
+    query += ` ORDER BY access_level, course_slug, title`
 
     const { rows } = await client.query(query, params)
     const resources = rows.map(r => ({
       ...r,
-      url: (!userId && r.access_level === 'member') ? null : r.url,
+      // Non-members AND testers cannot get member resource download links
+      url: ((!userId || isTester) && r.access_level === 'member') ? null : r.url,
+      locked: (!userId || isTester) && r.access_level === 'member',
+      tester_blocked: isTester && r.access_level === 'member',
     }))
 
     client.release()

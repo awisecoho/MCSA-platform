@@ -13,9 +13,21 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)',
+  '/api/courses(.*)',
+  '/api/debug',
+])
+
+const isAdminRoute = createRouteMatcher([
+  '/admin(.*)',
+  '/api/admin(.*)',
 ])
 
 export default clerkMiddleware(async (auth, req) => {
+  if (isAdminRoute(req)) {
+    await auth.protect()
+    // Admin role check is done in individual routes via requireAdmin()
+    return
+  }
   if (!isPublicRoute(req)) {
     await auth.protect()
   }

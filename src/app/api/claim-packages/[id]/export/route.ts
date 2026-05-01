@@ -1,7 +1,7 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 import { pool } from '@/lib/db'
 type Ctx = { params: { id: string } }
 
@@ -9,6 +9,20 @@ export async function POST(req: Request, { params }: Ctx) {
   const { userId } = await auth()
   const { export_type } = await req.json()
   const isPublic = !userId
+
+  // Check tester role — testers cannot export clean files
+  let isTester = false
+  if (userId) {
+    try {
+      const clerk = await clerkClient()
+      const u = await clerk.users.getUser(userId)
+      const meta = u.publicMetadata as Record<string, string>
+      isTester = meta?.role === 'tester'
+    } catch {}
+  }
+  if (isTester && (export_type === 'csv' || export_type === 'clean')) {
+    return NextResponse.json({ error: 'Tester accounts cannot download or export clean files' }, { status: 403 })
+  }
   const client = await pool.connect()
   try {
     // Get package (public can export preview)
