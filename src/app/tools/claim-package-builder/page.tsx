@@ -356,7 +356,7 @@ function PrintPacket({ pkg, photos, components, watermarked, onClose }: any) {
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
-export default function ClaimPackageBuilder() {
+function ClaimPackageBuilderInner() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -1256,5 +1256,14 @@ export default function ClaimPackageBuilder() {
         />
       )}
     </div>
+  )
+}
+
+import { Suspense } from 'react'
+export default function ClaimPackageBuilder() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#07061f] border-t-transparent rounded-full animate-spin"/></div>}>
+      <ClaimPackageBuilderInner />
+    </Suspense>
   )
 }
