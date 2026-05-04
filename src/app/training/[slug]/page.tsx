@@ -263,7 +263,7 @@ export default function CoursePage() {
     }
   }
 
-  const canAccess = (m: any) => m.is_preview || !!enrollment
+  const canAccess = (_m: any) => true // All content open during testing
   const progress = modules.length > 0 ? Math.round((completed.size / modules.length) * 100) : 0
   const activeIdx = modules.findIndex(m => m.id === activeModule?.id)
 
@@ -366,12 +366,12 @@ export default function CoursePage() {
                       onClick={() => { if (acc) { setActiveModule(mod); setTab('lesson') } }}
                       className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors
                         ${active ? 'bg-amber-50 border-l-2 border-amber-400' : 'hover:bg-gray-50'}
-                        ${!acc ? 'cursor-default' : 'cursor-pointer'}`}>
+                        'cursor-pointer'`}>
                       <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5 transition-colors
                         ${done ? 'bg-emerald-500' : active ? 'bg-amber-400' : 'bg-gray-100'}`}>
                         {done
                           ? <CheckCircle className="w-3.5 h-3.5 text-white" />
-                          : !acc
+                          : false
                             ? <Lock className="w-3 h-3 text-gray-400" />
                             : <span className="text-xs font-bold text-gray-600">{idx + 1}</span>
                         }
@@ -382,7 +382,7 @@ export default function CoursePage() {
                         </div>
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className="text-xs text-gray-400">{mod.duration_minutes} min</span>
-                          {mod.is_preview && <span className="text-xs text-amber-600 font-medium">Free</span>}
+                          
                         </div>
                       </div>
                     </button>
@@ -429,7 +429,7 @@ export default function CoursePage() {
 
               {/* LESSON TAB */}
               {tab === 'lesson' && activeModule && (
-                canAccess(activeModule) ? (
+                true ? (
                   <div>
                     <div className="px-6 pt-6 pb-4 border-b border-gray-100">
                       <div className="flex items-center gap-2 mb-2">
@@ -492,24 +492,16 @@ export default function CoursePage() {
                     {!enrollment && !user && (
                       <div className="px-6 pb-6 pt-4 border-t border-gray-100 bg-amber-50 text-center">
                         <p className="text-sm text-amber-800 mb-3">
-                          Sign in to enroll and track your progress across all modules.
+                          Sign in to track your progress across all modules.
                         </p>
                         <Link href="/sign-in"
                           className="inline-flex items-center gap-2 px-5 py-2 bg-[#07061f] text-white text-sm font-semibold rounded-lg hover:bg-[#1e1b4b] transition-colors">
-                          Sign In to Continue
+                          Sign In to Track Progress
                         </Link>
                       </div>
                     )}
 
-                    {!enrollment && user && (
-                      <div className="px-6 pb-6 pt-4 border-t border-gray-100 bg-amber-50 text-center">
-                        <p className="text-sm text-amber-800 mb-3">Enroll to unlock all modules and track your progress.</p>
-                        <button onClick={enroll} disabled={enrolling}
-                          className="inline-flex items-center gap-2 px-5 py-2 bg-amber-400 text-[#07061f] text-sm font-semibold rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-60">
-                          {enrolling ? 'Enrolling...' : 'Enroll Now — Free'}
-                        </button>
-                      </div>
-                    )}
+
                   </div>
                 ) : (
                   <div className="px-6 py-16 text-center">
