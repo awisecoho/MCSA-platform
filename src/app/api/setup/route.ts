@@ -169,6 +169,15 @@ export async function GET(req: Request) {
 
   // Step 3 — seed
   try {
+    // Clear existing seed data before re-seeding to prevent duplicates
+    await client.query(`DELETE FROM mcsa_module_progress`)
+    await client.query(`DELETE FROM mcsa_enrollments`)
+    await client.query(`DELETE FROM mcsa_modules`)
+    await client.query(`DELETE FROM mcsa_resources`)
+    await client.query(`DELETE FROM mcsa_courses`)
+    await client.query(`DELETE FROM mcsa_course_categories`)
+    await client.query(`DELETE FROM mcsa_membership_plans`)
+
     await client.query(`INSERT INTO mcsa_course_categories (name,slug,description,order_index)
       VALUES ('Municipal Claims Training','municipal-claims','Full MCSA curriculum',1)
       ON CONFLICT(slug) DO NOTHING`)
