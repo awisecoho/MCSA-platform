@@ -321,27 +321,15 @@ export default function CoursePage() {
                 {videos.length > 0 && <span className="flex items-center gap-1.5"><Youtube className="w-4 h-4 text-amber-400" />{videos.length} videos</span>}
               </div>
             </div>
-            <div className="flex-shrink-0">
-              {enrollment ? (
-                <div className="bg-white/10 rounded-xl px-6 py-4 text-center">
-                  <div className="text-3xl font-bold text-amber-400">{progress}%</div>
-                  <div className="text-xs text-gray-400 mt-1">{completed.size} of {modules.length} modules</div>
-                  <div className="w-full bg-white/20 rounded-full h-1.5 mt-2">
-                    <div className="bg-amber-400 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
-                  </div>
+            {enrollment && (
+              <div className="flex-shrink-0 bg-white/10 rounded-xl px-6 py-4 text-center">
+                <div className="text-3xl font-bold text-amber-400">{progress}%</div>
+                <div className="text-xs text-gray-400 mt-1">{completed.size} of {modules.length} modules</div>
+                <div className="w-full bg-white/20 rounded-full h-1.5 mt-2">
+                  <div className="bg-amber-400 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
                 </div>
-              ) : user ? (
-                <button onClick={enroll} disabled={enrolling}
-                  className="bg-amber-400 text-[#07061f] font-semibold px-7 py-3 rounded-xl hover:bg-amber-300 transition-colors disabled:opacity-60 text-sm">
-                  {enrolling ? 'Enrolling...' : 'Enroll Now — Free'}
-                </button>
-              ) : (
-                <Link href="/sign-in"
-                  className="bg-amber-400 text-[#07061f] font-semibold px-7 py-3 rounded-xl hover:bg-amber-300 transition-colors inline-block text-sm">
-                  Sign In to Enroll
-                </Link>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
