@@ -19,7 +19,17 @@ export async function GET(req: Request) {
 
       // ── MCSA-101 ─────────────────────────────────────────────────────────
 
-      ['mcsa-101-introduction', 0, `## Why Municipal Claims Require a Different Approach
+      ['mcsa-101-introduction', 0, `## A $340,000 Mistake That Happens Every Week
+
+A 2021 Pierce Enforcer pumper is rear-ended at an intersection. Significant rear compartment damage. The adjuster assigns it to the nearest available IA — a competent generalist who handles commercial trucks well.
+
+The IA routes it to a Mack truck body shop 12 miles away. The shop fixes the rear panel and two compartment doors. Nobody inspects the pump panel on the opposite side. Nobody tests the pump. The unit returns to active service in 11 days.
+
+Four months later, the pump fails during a structure fire. Post-incident investigation traces the failure to a cracked pump mounting bracket — damage that was present at the time of the collision but was never identified. The department files a complaint. The carrier faces a $340,000 exposure on a claim that settled for $18,000.
+
+The adjuster didn't do anything wrong by general standards. They did everything wrong by municipal standards.
+
+## Why Municipal Claims Require a Different Approach
 
 Every error in municipal claims traces back to one root cause — the adjuster applied a standard vehicle or commercial truck framework to a purpose-built system.
 
@@ -568,7 +578,11 @@ Repetitive identical tasks are not billed at the same per-unit rate for unit 1 a
 - Units 3–4: 75% rate
 - Units 5+: 60% rate`],
 
-      ['mcsa-104-labor-control', 2, `## How to Use These Ranges
+      ['mcsa-104-labor-control', 2, `## MCSA Labor Reasonableness Ranges
+
+> **Methodology Note:** These ranges were developed from field invoice analysis, certified EVT and upfitter consultations, manufacturer installation documentation, and review of contested labor claims across municipal accounts. Ranges reflect labor by a qualified technician with standard access. No published labor guide exists for emergency equipment — these ranges fill that vacuum. Any claim above the high end of a range requires photographic documentation of the specific complexity justifying the exception. Ranges are reviewed annually.
+
+## How to Use These Ranges
 
 These are reasonableness bands — not exact times. A job within the range: accept with note. Above the range: require written justification with specific complexity factors identified.
 
@@ -689,7 +703,11 @@ A shop submitting a replacement invoice is providing evidence of one purchase fr
 - If invoice pricing is within the MCSA band: accept with note
 - If invoice pricing exceeds the MCSA band: require additional distributor quote before accepting`],
 
-      ['mcsa-105-valuation', 1, `## Emergency Lighting Valuation Bands (2024)
+      ['mcsa-105-valuation', 1, `## MCSA Valuation Bands — 2024 Edition
+
+> **Source and Date:** Bands reflect Q3–Q4 2024 distributor pricing from authorized dealers and distributor quotes obtained during active claim reviews. They are not MSRP or list price — they reflect what an adjuster should expect to pay when sourcing from a legitimate authorized channel. Bands are reviewed and updated annually. Where a band says "Quote Required," no band applies — obtain a written OEM dealer quote before processing that line item.
+
+## Emergency Lighting Valuation Bands (2024)
 
 | Component | Low | Mid | High |
 |---|---|---|---|

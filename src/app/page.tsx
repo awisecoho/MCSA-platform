@@ -122,17 +122,19 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: 'Fire Apparatus', sub: 'Integrated pump & aerial systems', img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
-              { label: 'Police Interceptors', sub: 'Factory-modified platforms', img: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400&q=80' },
-              { label: 'Ambulances', sub: 'Medical module systems', img: 'https://images.unsplash.com/photo-1544991875-5dc1b05f5855?w=400&q=80' },
-              { label: 'Municipal Fleet', sub: 'Public works & utility', img: 'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?w=400&q=80' },
+              { label: 'Fire Apparatus', sub: 'Integrated pump & aerial systems', emoji: '🚒', courses: 'MCSA-109', color: 'from-red-900/40 to-red-950/60' },
+              { label: 'Police Interceptors', sub: 'Factory-modified platforms', emoji: '🚓', courses: 'MCSA-107', color: 'from-blue-900/40 to-blue-950/60' },
+              { label: 'Ambulances', sub: 'Medical module systems', emoji: '🚑', courses: 'MCSA-108', color: 'from-orange-900/40 to-orange-950/60' },
+              { label: 'Municipal Fleet', sub: 'Public works & utility', emoji: '🚛', courses: 'MCSA-110', color: 'from-green-900/40 to-green-950/60' },
             ].map(v => (
-              <div key={v.label} className="relative rounded-xl overflow-hidden group">
-                <img src={v.img} alt={v.label} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-navy-950/90 via-navy-950/30 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div className="text-white font-bold text-sm">{v.label}</div>
-                  <div className="text-slate-400 text-xs mt-0.5">{v.sub}</div>
+              <div key={v.label} className={`relative rounded-xl overflow-hidden group bg-gradient-to-br ${v.color} border border-white/10 hover:border-white/20 transition-all cursor-default`}>
+                <div className="p-6 h-48 flex flex-col justify-between">
+                  <div className="text-5xl">{v.emoji}</div>
+                  <div>
+                    <div className="text-white font-bold text-sm">{v.label}</div>
+                    <div className="text-slate-400 text-xs mt-0.5">{v.sub}</div>
+                    <div className="text-gold-400 text-xs mt-2 font-mono">{v.courses}</div>
+                  </div>
                 </div>
               </div>
             ))}

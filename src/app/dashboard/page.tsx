@@ -36,7 +36,7 @@ export default function Dashboard() {
     )
   }
 
-  const firstName = user.firstName || 'there'
+  const firstName = user.firstName || user.lastName || user.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'there'
   const inProgress = enrollments.filter(e => e.progress_percent > 0 && e.progress_percent < 100)
 
   return (
@@ -142,14 +142,38 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-              <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-700 mb-1">No courses enrolled yet</h3>
-              <p className="text-gray-500 text-sm mb-4">Browse the training catalog and enroll — it's free.</p>
-              <Link href="/training"
-                className="inline-block bg-amber-400 text-[#07061f] font-semibold px-5 py-2.5 rounded-lg hover:bg-amber-300 transition-colors text-sm">
-                Browse Training
-              </Link>
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              {/* Get started guidance */}
+              <div className="bg-gradient-to-r from-[#07061f] to-[#1e1b4b] px-6 py-5 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-white font-semibold mb-1">Start with MCSA-101 — Introduction to Municipal Claims</p>
+                  <p className="text-gray-400 text-sm">4 modules · 1.5h · The foundation for everything that follows</p>
+                </div>
+                <Link href="/training/mcsa-101-introduction"
+                  className="flex-shrink-0 bg-amber-400 text-[#07061f] font-semibold px-5 py-2.5 rounded-lg hover:bg-amber-300 transition-colors text-sm whitespace-nowrap">
+                  Begin Course →
+                </Link>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {[
+                  { code: 'MCSA-102', title: 'Vehicle Classification System', time: '2.0h', slug: 'mcsa-102-vehicle-classification' },
+                  { code: 'MCSA-107', title: 'Police & Law Enforcement Vehicles', time: '2.0h', slug: 'mcsa-107-police-vehicles' },
+                  { code: 'MCSA-109', title: 'Fire Apparatus Claims', time: '2.5h', slug: 'mcsa-109-fire-apparatus' },
+                ].map(c => (
+                  <Link key={c.slug} href={`/training/${c.slug}`}
+                    className="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50 transition-colors group">
+                    <span className="font-mono text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded flex-shrink-0">{c.code}</span>
+                    <span className="text-sm text-gray-700 flex-1">{c.title}</span>
+                    <span className="text-xs text-gray-400 flex-shrink-0">{c.time}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0 group-hover:text-amber-500 transition-colors" />
+                  </Link>
+                ))}
+              </div>
+              <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 text-center">
+                <Link href="/training" className="text-xs text-amber-600 font-medium hover:underline">
+                  View all 12 courses →
+                </Link>
+              </div>
             </div>
           )}
         </div>

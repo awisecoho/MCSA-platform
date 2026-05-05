@@ -67,6 +67,81 @@ const LEVEL_COLOR: Record<string, string> = {
   Certification: 'bg-amber-100 text-amber-700',
 }
 
+// ─── LEARNING OUTCOMES ───────────────────────────────────────────────────────
+
+const OUTCOMES: Record<string, string[]> = {
+  'mcsa-101-introduction': [
+    'Explain why municipal apparatus claims require a different framework than standard commercial vehicles',
+    'Identify the 7 active steps of every municipal claim and the failure point at each step',
+    'Describe the roles of the municipality, carrier, IA, and repair facility in the claims ecosystem',
+  ],
+  'mcsa-102-vehicle-classification': [
+    'Classify any municipal vehicle into Tier 1, 2, or 3 without hesitation',
+    'Identify factory differences between PIU and retail Explorer, and PPV and civilian Tahoe',
+    'Apply the classify-up rule and explain why under-classification is the most costly error',
+    'Recognize system trigger conditions that require adjacent-system inspection',
+  ],
+  'mcsa-103-documentation-standards': [
+    'Execute the complete MCSA photo sequence for each vehicle tier',
+    'Build a carrier-ready component inventory from a field inspection',
+    'Apply MCSA file naming conventions and folder structure standards',
+    'Identify the 6 elements a carrier quality reviewer looks for in a municipal file',
+  ],
+  'mcsa-104-labor-control': [
+    'Decompose any emergency equipment labor estimate into task-level line items',
+    'Apply MCSA labor reasonableness ranges to the 10 highest-variance task categories',
+    'Identify and reject lump-sum labor billing on any file',
+    'Apply quantity scaling rules to repetitive identical tasks',
+  ],
+  'mcsa-105-valuation': [
+    'Apply MCSA 2024 valuation bands to all major emergency equipment categories',
+    'Determine when an OEM quote is required versus when a band applies',
+    'Apply condition factors based on equipment age and pre-loss condition',
+    'Evaluate whether a shop invoice constitutes valid market evidence',
+  ],
+  'mcsa-106-repair-facility': [
+    'Apply the MCSA repair hierarchy to any vehicle tier and damage type combination',
+    'Structure split routing decisions and document the rationale',
+    'Explain hidden damage triggers for fire apparatus, ambulance, and police vehicle losses',
+    'Define return-to-service standards for municipal emergency apparatus',
+  ],
+  'mcsa-107-police-vehicles': [
+    'Identify the four primary police platforms and their factory law enforcement differences',
+    'Recognize Whelen, Federal Signal, Code 3, and SoundOff systems by architecture',
+    'Scope a complete police vehicle claim including interior systems and integrated equipment',
+    'Apply the airbag deployment trigger protocol to interior system assessment',
+  ],
+  'mcsa-108-ambulance': [
+    'Classify Type I, II, III, and I-AD ambulances and identify the module manufacturer',
+    'Identify the critical inspection points unique to Type III cab-module connection',
+    'Evaluate whether a remount analysis is appropriate for a given loss',
+    'Structure a total loss calculation for an ambulance under replacement cost coverage',
+  ],
+  'mcsa-109-fire-apparatus': [
+    'Execute the first-30-minutes protocol at a fire apparatus loss scene',
+    'Apply the system trigger matrix to any collision damage location',
+    'Identify NFPA 1911 and 1071 requirements and include them correctly in the file',
+    'Make and document the routing decision for OEM-authorized versus capable-shop repair',
+  ],
+  'mcsa-110-municipal-fleet': [
+    'Evaluate a plow truck claim using the hydraulic evaluation protocol',
+    'Inspect a dump body both with body down and body raised — document both conditions',
+    'Apply split routing to public works equipment with multiple damage types',
+    'Identify aerial boom truck damage requiring OEM involvement',
+  ],
+  'mcsa-301-file-compliance': [
+    'Score any municipal claim file against the 25-point MCSA compliance checklist',
+    'Identify and apply the 5 automatic failure triggers',
+    'Deliver actionable compliance feedback by category',
+    'Build a QA sampling program with appropriate triggers and KPIs',
+  ],
+  'mcsa-201-cmca-certification': [
+    'Demonstrate mastery of all MCSA-101 through MCSA-301 core competencies',
+    'Pass the 60-question CMCA proctored examination with 80% or higher',
+    'Earn the Certified Municipal Claims Adjuster (CMCA) designation',
+  ],
+}
+
 // ─── MARKDOWN COMPONENTS ──────────────────────────────────────────────────────
 
 const md: any = {
@@ -271,6 +346,22 @@ export default function CoursePage() {
               </div>
               <h1 className="text-2xl font-bold mb-2">{course.title}</h1>
               <p className="text-gray-300 text-sm max-w-2xl leading-relaxed">{course.description}</p>
+
+              {/* Learning outcomes */}
+              {OUTCOMES[slug] && (
+                <div className="mt-4 max-w-2xl">
+                  <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">What You'll Learn</p>
+                  <ul className="space-y-1">
+                    {OUTCOMES[slug].map((o, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                        <CheckCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        {o}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-5 mt-4 text-sm text-gray-400">
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-amber-400" />{course.duration_hours}h
@@ -301,13 +392,13 @@ export default function CoursePage() {
               </div>
             ) : user ? (
               <button onClick={enroll} disabled={enrolling}
-                className="flex-shrink-0 bg-amber-400 text-[#07061f] font-semibold px-6 py-3 rounded-xl hover:bg-amber-300 transition-colors disabled:opacity-60 text-sm whitespace-nowrap">
-                {enrolling ? 'Enrolling...' : 'Track My Progress'}
+                className="flex-shrink-0 text-amber-400 border border-amber-400/30 hover:border-amber-400 text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60 whitespace-nowrap">
+                {enrolling ? 'Enrolling...' : '+ Track Progress'}
               </button>
             ) : (
               <Link href="/sign-in"
-                className="flex-shrink-0 bg-white/10 text-white border border-white/20 font-medium px-5 py-2.5 rounded-xl hover:bg-white/20 transition-colors text-sm whitespace-nowrap">
-                Sign In to Track Progress
+                className="flex-shrink-0 text-gray-400 hover:text-white text-sm transition-colors whitespace-nowrap">
+                Sign in to track →
               </Link>
             )}
           </div>
@@ -438,7 +529,7 @@ export default function CoursePage() {
                         ? 'border-amber-400 text-[#07061f]'
                         : 'border-transparent text-gray-400 hover:text-gray-700'}`}>
                     {t === 'videos'    ? `Videos (${videos.length})`
-                    : t === 'resources' ? `Resources (${resources.length})`
+                    : t === 'resources' ? `OEM Docs (${resources.length})`
                     : 'Lesson'}
                   </button>
                 ))}

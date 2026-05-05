@@ -65,11 +65,11 @@ export default function Navigation() {
                 </div>
               )}
             </div>
-            <Link href="/accreditation" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/accreditation' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
-              Accreditation
-            </Link>
             <Link href="/resources" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/resources' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
               Resources
+            </Link>
+            <Link href="/accreditation" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/accreditation' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
+              Certification
             </Link>
             <Link href="/membership" className={`px-3 py-2 text-sm rounded-lg transition-colors ${pathname === '/membership' ? 'text-[#07061f] bg-gray-100' : 'text-gray-600 hover:text-[#07061f] hover:bg-gray-50'}`}>
               Membership
@@ -112,7 +112,7 @@ export default function Navigation() {
         <div className="md:hidden border-t border-gray-200 bg-white px-4 py-4 space-y-1">
           <Link href="/about" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>About</Link>
           <Link href="/training" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Training</Link>
-          <Link href="/accreditation" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Accreditation</Link>
+          <Link href="/accreditation" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Certification</Link>
           <Link href="/resources" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Resources</Link>
           <Link href="/membership" className="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-50" onClick={() => setMobileOpen(false)}>Membership</Link>
           {isAdmin && <Link href="/admin/invite-tester" className="block px-3 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50" onClick={() => setMobileOpen(false)}>Admin</Link>}
