@@ -88,22 +88,46 @@ export default function ResourcesPage() {
           </select>
         </div>
 
-        <div className="flex gap-2 mb-5 flex-wrap">
-          {CATEGORIES.map(cat => (
-            <button key={cat} onClick={() => setCategory(cat)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors
-                ${category === cat ? 'bg-[#07061f] text-white border-[#07061f]' : 'border-gray-200 text-gray-600 bg-white hover:border-gray-400'}`}>
-              {cat}
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
+          <div className="flex gap-2 flex-wrap">
+            {CATEGORIES.map(cat => (
+              <button key={cat} onClick={() => setCategory(cat)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors
+                  ${category === cat ? 'bg-[#07061f] text-white border-[#07061f]' : 'border-gray-200 text-gray-600 bg-white hover:border-gray-400'}`}>
+                {cat}
+                {cat !== 'All' && resources.filter(r => r.category === cat).length > 0 && (
+                  <span className="ml-1 text-xs opacity-60">({resources.filter(r => r.category === cat).length})</span>
+                )}
+              </button>
+            ))}
+          </div>
+          {(search || category !== 'All' || course) && (
+            <button onClick={() => { setSearch(''); setCategory('All'); setCourse('') }}
+              className="text-xs text-amber-600 hover:underline">
+              Clear filters
             </button>
-          ))}
+          )}
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-7 h-7 text-amber-400 animate-spin" />
           </div>
+        ) : resources.length === 0 && (course || category !== 'All' || search) ? (
+          <div className="text-center py-16 text-gray-400">
+            <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium text-gray-500 mb-1">No resources match these filters</p>
+            <button onClick={() => { setSearch(''); setCategory('All'); setCourse('') }}
+              className="text-xs text-amber-600 hover:underline mt-1">Clear filters</button>
+          </div>
         ) : resources.length === 0 ? (
-          <div className="text-center py-16 text-gray-400 text-sm">No resources match these filters.</div>
+          <div className="text-center py-16 text-gray-400">
+            <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium text-gray-500 mb-1">Resource library loading</p>
+            <p className="text-xs text-gray-400">If this persists, the library may still be indexing.</p>
+            <button onClick={() => window.location.reload()}
+              className="mt-3 text-xs text-amber-600 hover:underline">Refresh</button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {resources.map((r: any) => {

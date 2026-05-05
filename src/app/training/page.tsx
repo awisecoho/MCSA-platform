@@ -86,6 +86,18 @@ export default function TrainingPage() {
           <div className="flex items-center justify-center py-24">
             <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
           </div>
+        ) : courses.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <BookOpen className="w-12 h-12 text-gray-300 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">Courses temporarily unavailable</h3>
+            <p className="text-gray-400 text-sm max-w-md">
+              The course catalog is being updated. Try refreshing in a moment.
+            </p>
+            <button onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-amber-400 text-[#07061f] font-semibold text-sm rounded-lg hover:bg-amber-300 transition-colors">
+              Refresh
+            </button>
+          </div>
         ) : (
           <div className="space-y-12">
             {TRACK_ORDER.map(track => {

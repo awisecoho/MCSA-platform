@@ -1702,7 +1702,21 @@ For TPAs and carriers implementing MCSA standards across a program:
 
 **Total: 25/25 — Compliant**
 
-This is a model file. Every element is present, documented, and defensible. No supplements required.`],
+Here is the complete line-by-line scoring for File 2:
+
+| Category | Score | Finding |
+|---|---|---|
+| Classification | 5/5 | Tier 3 documented with rationale. Pierce Enforcer identified by apparatus type and OEM. System trigger protocol completed and documented. Build sheet obtained from department. |
+| Documentation | 4/5 | Full 40+ photo sequence complete including pump panel from both sides. All photos labeled with location, component, and condition. Component inventory lists all compartment contents. VIN and unit number documented. Engine hours NOT documented — one deduction. |
+| Estimate Quality | 5/5 | Zero lump-sum labor items. Door R&I and body repair decomposed to task level. All labor within MCSA ranges. Pierce OEM parts quote attached with part numbers and lead times. |
+| Repair Routing | 5/5 | Pierce-capable body shop documented by name. OEM inspection completed before routing. OEM clearance letter attached. Routing rationale written with facility capability confirmed. |
+| System Completeness | 5/5 | Pump panel documented from both sides with close-ups. OEM inspection report confirms no system damage. Hose bed structural integrity confirmed by OEM technician. NFPA 1911 post-repair pump test required — cost in scope, certified testing agency identified. |
+
+**Total: 24/25** — One point deducted: engine hours not documented.
+
+**The critical lesson from this file:** The difference between 24/25 and a failing file is not complexity — it is completeness. Every apparatus file requires both odometer and engine hours. An apparatus with 6,200 engine hours has a different return-to-service profile than one with 900 hours. That number belongs in the file every time.
+
+**What makes this file pass where most fail:** The OEM inspection report. Without the Pierce technician's written confirmation that the pump panel was undamaged, the "no system involvement" finding is an adjuster's opinion. With it, it is a documented OEM finding. That distinction is the difference between a file that holds under carrier audit and one that generates a supplement request.`],
 
 
       // ── MCSA-201 ─────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import { useUser } from '@clerk/nextjs'
 import Navigation from '@/components/layout/Navigation'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
+import { useMemo } from 'react'
 import remarkGfm from 'remark-gfm'
 import {
   Clock, BookOpen, CheckCircle, ExternalLink,
@@ -201,6 +202,27 @@ const md: any = {
   ),
   hr: () => <hr className="border-gray-200 my-6" />,
 }
+
+// ─── MEMOIZED CONTENT RENDERER ───────────────────────────────────────────────
+// Prevents re-renders on every state change (enrolled, completed, tab switch)
+
+import React from 'react'
+
+const MemoizedContent = React.memo(function MemoizedContent({ content }: { content: string }) {
+  if (!content) return (
+    <div className="text-center py-12 text-gray-400">
+      <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
+      <p className="text-sm">Content loading...</p>
+    </div>
+  )
+  return (
+    <div>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={md}>
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
+})
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
@@ -556,16 +578,7 @@ export default function CoursePage() {
                   </div>
 
                   <div className="px-6 py-8">
-                    {activeModule.content ? (
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={md}>
-                        {activeModule.content}
-                      </ReactMarkdown>
-                    ) : (
-                      <div className="text-center py-12 text-gray-400">
-                        <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                        <p className="text-sm">Content loading...</p>
-                      </div>
-                    )}
+                    <MemoizedContent content={activeModule.content} />
                   </div>
 
                   <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
