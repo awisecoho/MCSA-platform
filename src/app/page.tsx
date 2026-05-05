@@ -7,7 +7,7 @@ const stats = [
   { value: '12', label: 'Certification Courses', sub: 'MCSA-101 through 301' },
   { value: '3', label: 'Membership Tiers', sub: 'Adjuster to Carrier' },
   { value: '1', label: 'Credential', sub: 'CMCA Designation' },
-  { value: '∞', label: 'Industry Gap', sub: 'We fill it' },
+  { value: '0', label: 'Published Standards', sub: 'Before MCSA' },
 ]
 
 const problems = [

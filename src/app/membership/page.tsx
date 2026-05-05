@@ -1,82 +1,152 @@
 import Navigation from '@/components/layout/Navigation'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
-import { CheckCircle, Star, ArrowRight, Shield, Users, Award, BookOpen, FileCheck, Zap, ChevronRight } from 'lucide-react'
+import {
+  CheckCircle, XCircle, ChevronRight, Clock, FileCheck, Award, Wrench
+} from 'lucide-react'
 
 const plans = [
   {
-    name: 'Professional Member',
+    name: 'Professional',
     slug: 'professional',
     price_monthly: 29,
     price_annual: 299,
-    description: 'Full access for independent adjusters and claims professionals.',
-    color: 'border-navy-300',
-    headerBg: 'bg-navy-900',
+    save: '14%',
+    description: 'For independent adjusters and individual claims professionals.',
+    highlight: false,
     badge: null,
     features: [
-      'All 12 training modules — free',
-      'Complete resource library',
-      'Labor & valuation matrices',
-      'CMCA certification pathway',
-      'Vendor reference database',
-      'SOP library access',
-      'Member directory listing',
-      'Discounted conference rates',
+      { label: 'All 12 MCSA courses — full content', note: null },
+      { label: 'CMCA certification pathway', note: null },
+      { label: 'MCSA photo checklists — all tiers', note: 'Printable PDF' },
+      { label: 'Labor reasonableness ranges card', note: 'Quick reference' },
+      { label: '2024 equipment valuation bands', note: 'Updated annually' },
+      { label: 'OEM resource library', note: '22+ documents' },
+      { label: 'Claim Package Builder — full workflow', note: null },
+      { label: 'CSV export and clean PDF packet', note: null },
+      { label: 'Member directory listing', note: null },
     ],
     cta: 'Join as Professional',
-    ctaStyle: 'bg-navy-900 hover:bg-navy-800 text-white',
+    ctaStyle: 'bg-[#07061f] hover:bg-[#1e1b4b] text-white',
   },
   {
-    name: 'Carrier / TPA Member',
+    name: 'Carrier / TPA',
     slug: 'carrier',
     price_monthly: 99,
     price_annual: 999,
+    save: '16%',
     description: 'For insurance carriers, TPAs, and risk management teams.',
-    color: 'border-gold-400 shadow-xl shadow-gold-100',
-    headerBg: 'bg-gradient-to-br from-navy-900 to-navy-700',
+    highlight: true,
     badge: 'Most Popular',
     features: [
-      'Everything in Professional',
-      'Team member seats (up to 10)',
-      'Compliance audit tools',
-      'File review framework',
-      'Priority support',
-      'Custom carrier reporting',
-      'Early access to new standards',
-      'Annual standards briefing',
+      { label: 'Everything in Professional', note: null },
+      { label: 'Up to 10 team member seats', note: null },
+      { label: 'File compliance audit framework', note: '25-point checklist' },
+      { label: 'QA program templates and KPI tracking', note: null },
+      { label: 'Priority support', note: '< 1 business day' },
+      { label: 'Custom carrier compliance reporting', note: null },
+      { label: 'Early access to new standards', note: null },
+      { label: 'Annual standards briefing', note: 'Virtual' },
     ],
     cta: 'Join as Carrier / TPA',
-    ctaStyle: 'bg-gold-500 hover:bg-gold-400 text-navy-900',
+    ctaStyle: 'bg-amber-400 hover:bg-amber-300 text-[#07061f]',
   },
   {
     name: 'Founding Member',
     slug: 'founding',
     price_monthly: 0,
     price_annual: 0,
-    description: 'Limited founding membership for early supporters who help shape MCSA.',
-    color: 'border-slate-200',
-    headerBg: 'bg-slate-700',
-    badge: 'Limited Availability',
+    save: null,
+    description: 'Limited founding membership for early supporters who help shape MCSA standards.',
+    highlight: false,
+    badge: 'Limited',
     features: [
-      'All Professional benefits',
-      'Founding member recognition',
-      'Input on standards development',
-      'Complimentary conference registration',
-      'Founding member certificate',
-      'Name in MCSA founding record',
+      { label: 'All Professional benefits', note: 'Full access' },
+      { label: 'Founding member recognition', note: 'Site and materials' },
+      { label: 'Input on standards development', note: 'Annual survey + calls' },
+      { label: 'Complimentary conference registration', note: 'When launched' },
+      { label: 'Founding member certificate', note: null },
+      { label: 'Name in MCSA founding record', note: null },
     ],
-    cta: 'Apply for Founding',
-    ctaStyle: 'bg-slate-800 hover:bg-slate-700 text-white',
+    cta: 'Apply for Founding Membership',
+    ctaStyle: 'bg-slate-700 hover:bg-slate-600 text-white',
   },
 ]
 
-const memberBenefits = [
-  { icon: BookOpen, title: 'All Training Free', desc: 'Every course in the MCSA catalog at no extra charge. New courses added automatically.' },
-  { icon: FileCheck, title: 'SOPs & Checklists', desc: 'The complete MCSA standards library — photo checklists, estimate validation SOPs, compliance frameworks.' },
-  { icon: Zap, title: 'Labor & Valuation Tools', desc: 'Task-level labor matrices and equipment valuation bands built from real municipal claims data.' },
-  { icon: Shield, title: 'Vendor Reference Library', desc: 'Identification guides, complexity ratings, and estimating notes for 30+ manufacturers and component categories.' },
-  { icon: Award, title: 'CMCA Certification Path', desc: 'Full access to the CMCA certification program — the only credential of its kind in the industry.' },
-  { icon: Users, title: 'Member Network', desc: 'Connect with the growing community of adjusters, carriers, and municipal risk managers working to the MCSA standard.' },
+const comparison = [
+  { feature: 'Training', section: true },
+  { feature: 'All 12 MCSA courses', pro: true, carrier: true, founding: true },
+  { feature: 'CMCA certification exam', pro: true, carrier: true, founding: true },
+  { feature: 'New courses added automatically', pro: true, carrier: true, founding: true },
+  { feature: 'Tools', section: true },
+  { feature: 'Claim Package Builder (full 9-step workflow)', pro: true, carrier: true, founding: true },
+  { feature: 'Save and reopen claim packages', pro: true, carrier: true, founding: true },
+  { feature: 'CSV export', pro: true, carrier: true, founding: true },
+  { feature: 'Clean PDF export (no watermark)', pro: true, carrier: true, founding: true },
+  { feature: 'Multi-user team seats (up to 10)', pro: false, carrier: true, founding: false },
+  { feature: 'Resources', section: true },
+  { feature: 'OEM documentation library', pro: true, carrier: true, founding: true },
+  { feature: 'MCSA photo checklists (all tiers)', pro: true, carrier: true, founding: true },
+  { feature: 'Labor reasonableness ranges card', pro: true, carrier: true, founding: true },
+  { feature: '2024 equipment valuation band tables', pro: true, carrier: true, founding: true },
+  { feature: 'Compliance', section: true },
+  { feature: '25-point file compliance checklist', pro: true, carrier: true, founding: true },
+  { feature: 'QA program templates and KPI tracking', pro: false, carrier: true, founding: false },
+  { feature: 'Carrier-level compliance reporting', pro: false, carrier: true, founding: false },
+  { feature: 'Support', section: true },
+  { feature: 'Standard support', pro: true, carrier: true, founding: true },
+  { feature: 'Priority support (< 1 business day)', pro: false, carrier: true, founding: false },
+  { feature: 'Annual standards briefing', pro: false, carrier: true, founding: false },
+]
+
+const valueProps = [
+  {
+    icon: Clock,
+    title: 'Pay for one claim. Recover the cost.',
+    desc: 'At $29/month, a single correctly-scoped Tier 3 apparatus claim typically justifies the annual membership cost. The labor control methodology routinely identifies $2,000–$8,000 in unsupported line items per claim.',
+  },
+  {
+    icon: FileCheck,
+    title: 'The only structured framework for this class.',
+    desc: 'No published labor guides exist for emergency equipment. No valuation database covers apparatus systems. MCSA fills the void with documented ranges derived from field data and EVT consultation — defensible under carrier audit.',
+  },
+  {
+    icon: Award,
+    title: 'A credential that means something.',
+    desc: 'The CMCA is the only designation in the claims industry specific to municipal apparatus. Carriers who see CMCA on a file know the adjuster applied a documented standard — not guesswork.',
+  },
+  {
+    icon: Wrench,
+    title: 'Built for use in the field.',
+    desc: 'Every tool and checklist is designed for a tablet at an inspection site. The Claim Package Builder walks through a complete file workflow — classification, photo checklist, component inventory, labor review, valuation, compliance, export.',
+  },
+]
+
+const faq = [
+  {
+    q: 'Is there a free trial?',
+    a: 'All 12 courses are open for preview without an account. Membership is required for tools (Claim Package Builder, clean exports), downloadable checklists, and CMCA certification.',
+  },
+  {
+    q: 'What does Carrier / TPA include that Professional does not?',
+    a: 'Multi-user seat management (up to 10 users), QA program templates, carrier-level compliance reporting, priority support, and early access to new standards releases. Designed for in-house teams managing a portfolio of municipal claims.',
+  },
+  {
+    q: 'How is the CMCA exam administered?',
+    a: '60-question proctored examination, 90-minute time limit, 80% passing score. Taken online through the MCSA platform. Three attempts included with a 30-day waiting period between attempts.',
+  },
+  {
+    q: 'Are the labor ranges and valuation bands updated?',
+    a: 'Yes — annually, and on an off-cycle basis when market data warrants. The 2024 edition reflects Q3–Q4 2024 distributor pricing from authorized dealers. Update history is documented in the member resource notes.',
+  },
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Monthly memberships can be cancelled before the next billing date. Annual memberships are non-refundable after the first 30 days. CMCA certification is retained after earning, regardless of membership status.',
+  },
+  {
+    q: 'Is the Founding Member tier still available?',
+    a: 'Founding membership is limited and offered to early supporters who help shape the MCSA standards. Contact us to apply. Availability depends on remaining seats.',
+  },
 ]
 
 export default function MembershipPage() {
@@ -85,97 +155,102 @@ export default function MembershipPage() {
       <Navigation />
 
       {/* Header */}
-      <div className="bg-navy-900 pt-24 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center gap-2 text-slate-400 text-sm mb-4 justify-center">
-            <Link href="/" className="hover:text-white">Home</Link>
+      <div className="bg-[#07061f] pt-20 pb-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 text-slate-400 text-sm mb-5">
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="text-white">Membership</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{fontFamily:'var(--font-playfair)'}}>
-            MCSA Membership
-          </h1>
-          <p className="text-slate-300 text-lg max-w-2xl mx-auto">
-            Join the association setting the standard for municipal property and equipment claims. Members get everything — all training, all tools, all resources.
-          </p>
+          <div className="max-w-3xl">
+            <h1 className="text-4xl font-bold text-white mb-4" style={{fontFamily:'var(--font-playfair)'}}>
+              MCSA Membership
+            </h1>
+            <p className="text-slate-300 text-lg leading-relaxed">
+              The only membership built specifically for municipal apparatus claims.
+              All training, tools, standards, and certification — in one framework.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Pricing */}
+      {/* Pricing cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map(plan => (
-            <div key={plan.slug} className={`bg-white rounded-2xl border-2 ${plan.color} overflow-hidden relative flex flex-col`}>
+            <div key={plan.slug}
+              className={`bg-white rounded-2xl border-2 overflow-hidden flex flex-col relative
+                ${plan.highlight ? 'border-amber-400 shadow-xl shadow-amber-100/40' : 'border-gray-200'}`}>
               {plan.badge && (
                 <div className="absolute top-4 right-4">
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${plan.badge === 'Most Popular' ? 'bg-gold-500 text-navy-900' : 'bg-slate-100 text-slate-600'}`}>
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full
+                    ${plan.badge === 'Most Popular' ? 'bg-amber-400 text-[#07061f]' : 'bg-slate-100 text-slate-600'}`}>
                     {plan.badge}
                   </span>
                 </div>
               )}
-
-              {/* Header */}
-              <div className={`${plan.headerBg} p-6 pb-8`}>
-                <div className="text-white font-bold text-lg mb-1" style={{fontFamily:'var(--font-playfair)'}}>{plan.name}</div>
-                <p className="text-slate-300 text-sm leading-relaxed">{plan.description}</p>
-                <div className="mt-6">
-                  {plan.price_monthly === 0 ? (
-                    <div className="text-white text-3xl font-bold">Contact Us</div>
-                  ) : (
-                    <>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-white text-4xl font-bold">${plan.price_monthly}</span>
-                        <span className="text-slate-400 text-sm">/month</span>
-                      </div>
-                      <div className="text-slate-400 text-xs mt-1">or ${plan.price_annual}/year (save ${(plan.price_monthly * 12) - plan.price_annual})</div>
-                    </>
-                  )}
+              <div className={`p-6 pb-7 ${plan.highlight ? 'bg-[#07061f]' : 'bg-slate-900'}`}>
+                <div className="text-white font-bold text-lg mb-1">{plan.name}</div>
+                <p className="text-slate-300 text-sm leading-relaxed mb-5">{plan.description}</p>
+                <div className="flex items-end gap-2">
+                  {plan.price_monthly === 0
+                    ? <div className="text-3xl font-bold text-white">Free</div>
+                    : <>
+                        <div className="text-3xl font-bold text-white">${plan.price_monthly}</div>
+                        <div className="text-slate-400 text-sm mb-1">/month</div>
+                      </>
+                  }
                 </div>
+                {plan.price_annual > 0 && (
+                  <p className="text-xs text-slate-400 mt-1">
+                    ${plan.price_annual}/year — save {plan.save}
+                  </p>
+                )}
               </div>
-
-              {/* Features */}
               <div className="p-6 flex-1">
-                <ul className="space-y-3 mb-6">
-                  {plan.features.map(f => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm text-slate-700">
+                <ul className="space-y-3">
+                  {plan.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
                       <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                      {f}
+                      <div className="text-sm text-gray-700">
+                        {f.label}
+                        {f.note && <span className="text-gray-400 text-xs ml-1">— {f.note}</span>}
+                      </div>
                     </li>
                   ))}
                 </ul>
               </div>
-
               <div className="px-6 pb-6">
-                <Link href={plan.price_monthly === 0 ? '/contact' : '/register'}
-                  className={`block w-full text-center font-bold py-3.5 rounded-xl transition-colors ${plan.ctaStyle}`}>
+                <Link href="/sign-up"
+                  className={`block w-full text-center py-3 rounded-xl font-semibold text-sm transition-colors ${plan.ctaStyle}`}>
                   {plan.cta}
                 </Link>
               </div>
             </div>
           ))}
         </div>
-
-        <p className="text-center text-slate-500 text-sm mt-6">
-          All memberships include a 14-day satisfaction guarantee. Secure payment via Stripe.
-        </p>
       </div>
 
-      {/* Benefits deep-dive */}
-      <div className="bg-white py-20">
+      {/* Why MCSA */}
+      <div className="bg-white border-y border-gray-200 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-navy-900 mb-3" style={{fontFamily:'var(--font-playfair)'}}>Everything included in Professional membership</h2>
-            <p className="text-slate-600">No hidden paywalls. No per-course fees for members. Everything in the MCSA catalog, included.</p>
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold text-[#07061f] mb-2" style={{fontFamily:'var(--font-playfair)'}}>
+              Why adjusters and carriers join
+            </h2>
+            <p className="text-gray-500 text-sm max-w-2xl mx-auto">
+              Membership is built around the practical economics of handling municipal apparatus claims correctly.
+            </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {memberBenefits.map(b => (
-              <div key={b.title} className="flex gap-4 p-5 rounded-2xl border border-slate-100 hover:border-navy-200 hover:shadow-md transition-all">
-                <div className="w-10 h-10 bg-navy-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <b.icon className="w-5 h-5 text-navy-700" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {valueProps.map((v, i) => (
+              <div key={i} className="flex gap-4 p-6 rounded-xl border border-gray-200 hover:border-amber-200 transition-colors">
+                <div className="flex-shrink-0 w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                  <v.icon className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-navy-900 mb-1">{b.title}</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">{b.desc}</p>
+                  <h3 className="font-semibold text-[#07061f] text-sm mb-1">{v.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{v.desc}</p>
                 </div>
               </div>
             ))}
@@ -183,33 +258,81 @@ export default function MembershipPage() {
         </div>
       </div>
 
-      {/* FAQ */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-2xl font-bold text-navy-900 mb-8 text-center" style={{fontFamily:'var(--font-playfair)'}}>Frequently Asked Questions</h2>
-        <div className="space-y-4">
-          {[
-            ['Do I need to be a licensed adjuster?', 'No. MCSA membership is open to independent adjusters, carrier employees, TPAs, municipal risk managers, and anyone involved in the municipal claims space.'],
-            ['How does billing work?', 'Membership is billed monthly or annually through Stripe. You can cancel anytime from your account settings. Annual memberships are non-refundable after 14 days.'],
-            ['Is the CMCA certification included in membership?', 'Yes. All courses required for the CMCA, including the certification exam, are included in Professional and Carrier membership at no additional charge.'],
-            ['How often is content updated?', 'MCSA standards and course content are reviewed annually and updated whenever significant industry changes occur. Members are notified of updates by email.'],
-            ['Can I share my membership with colleagues?', 'Professional memberships are individual. Carrier/TPA memberships include up to 10 team seats. Contact us for larger teams.'],
-          ].map(([q, a]) => (
-            <div key={q} className="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 className="font-semibold text-navy-900 mb-2 text-sm">{q}</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">{a}</p>
-            </div>
-          ))}
+      {/* Comparison table */}
+      <div className="py-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-bold text-[#07061f] text-center mb-8" style={{fontFamily:'var(--font-playfair)'}}>
+          Full feature comparison
+        </h2>
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+          <div className="grid grid-cols-4 bg-[#07061f] text-white text-xs font-semibold uppercase tracking-wider">
+            <div className="col-span-1 px-6 py-3.5">Feature</div>
+            <div className="px-4 py-3.5 text-center">Professional</div>
+            <div className="px-4 py-3.5 text-center text-amber-400">Carrier / TPA</div>
+            <div className="px-4 py-3.5 text-center">Founding</div>
+          </div>
+          {comparison.map((row, i) => {
+            if (row.section) return (
+              <div key={i} className="grid grid-cols-4 bg-gray-50 border-t border-gray-200">
+                <div className="col-span-4 px-6 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  {row.feature}
+                </div>
+              </div>
+            )
+            return (
+              <div key={i} className="grid grid-cols-4 border-t border-gray-100 hover:bg-gray-50 transition-colors">
+                <div className="col-span-1 px-6 py-3 text-sm text-gray-700">{row.feature}</div>
+                <div className="px-4 py-3 flex items-center justify-center">
+                  {row.pro ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-gray-200" />}
+                </div>
+                <div className="px-4 py-3 flex items-center justify-center">
+                  {row.carrier ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-gray-200" />}
+                </div>
+                <div className="px-4 py-3 flex items-center justify-center">
+                  {row.founding ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-gray-200" />}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
-      {/* Final CTA */}
-      <div className="bg-navy-900 py-16">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4" style={{fontFamily:'var(--font-playfair)'}}>Start working to the standard.</h2>
-          <p className="text-slate-300 mb-8">Join MCSA and get immediate access to every training module, tool, and resource in the catalog.</p>
-          <Link href="/register" className="inline-flex items-center gap-2 bg-gold-500 hover:bg-gold-400 text-navy-900 font-bold px-8 py-4 rounded-xl transition-colors">
-            Join MCSA Today <ArrowRight className="w-5 h-5" />
-          </Link>
+      {/* FAQ */}
+      <div className="bg-white border-t border-gray-200 py-16">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-[#07061f] text-center mb-10" style={{fontFamily:'var(--font-playfair)'}}>
+            Frequently asked questions
+          </h2>
+          <div className="space-y-6">
+            {faq.map((item, i) => (
+              <div key={i} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
+                <h3 className="font-semibold text-[#07061f] mb-2">{item.q}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{item.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom CTA */}
+      <div className="bg-[#07061f] py-14">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl font-bold text-white mb-3" style={{fontFamily:'var(--font-playfair)'}}>
+            Start with the training — no account required.
+          </h2>
+          <p className="text-slate-300 text-sm mb-7 max-w-xl mx-auto">
+            Preview all 12 courses and browse the OEM resource library before joining.
+            Membership unlocks tools, clean exports, and CMCA certification.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/training"
+              className="px-7 py-3 bg-amber-400 text-[#07061f] font-semibold rounded-xl hover:bg-amber-300 transition-colors text-sm">
+              Browse Training →
+            </Link>
+            <Link href="/sign-up"
+              className="px-7 py-3 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors text-sm">
+              Create Free Account
+            </Link>
+          </div>
         </div>
       </div>
 
