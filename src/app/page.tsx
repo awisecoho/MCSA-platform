@@ -56,10 +56,11 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
           <div className="max-w-4xl">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-8 animate-fade-in-up">
+            <Link href="/founding" className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-8 animate-fade-in-up hover:bg-white/20 hover:border-white/30 transition-all group">
               <Star className="w-3.5 h-3.5 text-gold-400" />
-              <span className="text-white/80 text-xs font-medium tracking-wide uppercase">Now Enrolling — Founding Members</span>
-            </div>
+              <span className="text-white/80 text-xs font-medium tracking-wide uppercase group-hover:text-white transition-colors">Now Enrolling — Founding Members</span>
+              <span className="text-white/40 text-xs group-hover:text-white/60 transition-colors">→</span>
+            </Link>
 
             <h1 className="text-5xl md:text-7xl font-bold text-white leading-[1.05] mb-6 animate-fade-in-up delay-100" style={{fontFamily:'var(--font-playfair)'}}>
               The Standard for{' '}

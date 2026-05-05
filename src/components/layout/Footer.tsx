@@ -57,6 +57,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {[
                 ['About MCSA', '/about'],
+                ['Founding Membership', '/founding'],
                 ['Membership', '/membership'],
                 ['Accreditation & CMCA', '/accreditation'],
                 ['Resource Library', '/resources'],

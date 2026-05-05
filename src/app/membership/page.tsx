@@ -68,7 +68,8 @@ const plans = [
       { label: 'Founding member certificate', note: null },
       { label: 'Name in MCSA founding record', note: null },
     ],
-    cta: 'Apply for Founding Membership',
+    cta: 'Apply for Founding Membership →',
+    ctaHref: '/founding',
     ctaStyle: 'bg-slate-700 hover:bg-slate-600 text-white',
   },
 ]
@@ -221,7 +222,7 @@ export default function MembershipPage() {
                 </ul>
               </div>
               <div className="px-6 pb-6">
-                <Link href="/sign-up"
+                <Link href={(plan as any).ctaHref || '/sign-up'}
                   className={`block w-full text-center py-3 rounded-xl font-semibold text-sm transition-colors ${plan.ctaStyle}`}>
                   {plan.cta}
                 </Link>
